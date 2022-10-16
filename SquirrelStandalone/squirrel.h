@@ -487,7 +487,6 @@ public:
         __sq_rdbg_hook(dbgServer, sqvm, 'l', line, srcFileName, 0, 0, 0);
         if (dbgServer->_autoupdate && __sq_rdbg_update(dbgServer))
             __sq_raiseerror(sqvm, "invalid socket");
-
     }
 #pragma endregion
 };

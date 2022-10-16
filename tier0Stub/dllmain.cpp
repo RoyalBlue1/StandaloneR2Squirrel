@@ -8,27 +8,19 @@
 class IMemAlloc;
 
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
-}
+
+
+
 
 
 
 
 
 extern "C" void stub() {
+#pragma comment(linker, "/EXPORT:" "Print_ClearClientTime"  "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "Print_EnableTimePrefix"  "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "Print_SetClientTime"  "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "?JTGuts_AddDependentJobArray@@YA?AW4JobID_t@@W4JobTypeID_t@@W41@_K2IIPEBW41@2E@Z" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "LoggingSystem_RegisterLoggingChannel"  "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "SendRemoteErrorReport" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "LoggingSystem_Log" "=" __FUNCTION__)
@@ -78,7 +70,7 @@ extern "C" void stub() {
 #pragma comment(linker, "/EXPORT:" "?JT_GetCurrentThread@@YAIXZ" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "?LockForRead@CThreadSpinRWLock@@QEBAXXZ" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "DetectLanguage" "=" __FUNCTION__)
-#pragma comment(linker, "/EXPORT:" "CommandLine" "=" __FUNCTION__)//prob used
+
 #pragma comment(linker, "/EXPORT:" "?Start@CThread@@UEAA_N_KW4ThreadPriorityEnum_t@1@@Z" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "?Run@CThread@@MEAAHXZ" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "RunTSListTests" "=" __FUNCTION__)
@@ -115,37 +107,52 @@ extern "C" void stub() {
 #pragma comment(linker, "/EXPORT:" "?JTGuts_AddDependentJob@@YA?AW4JobID_t@@W4JobTypeID_t@@W41@_K2IIPEBW41@@Z" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "Plat_FloatTime" "=" __FUNCTION__)
 
-
+#pragma comment(linker, "/EXPORT:" "?JT_GrowJobArray_Lock@@YAIW4JobID_t@@@Z" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "?JT_GrowJobArray_Unlock@@YAXW4JobID_t@@I@Z" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "?JT_DoneGrowingJobArray@@YAXW4JobID_t@@@Z" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "?JT_GrowJobArray_SingleGrower@@YAXW4JobID_t@@I@Z" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "?JT_HelpWithJobTypes@@YA_NP6A_N_K@Z00@Z" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "?JTGuts_AddJob_Try@@YA?AW4JobID_t@@W4JobTypeID_t@@W41@_K2@Z" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "?JT_SetThreadIdx@@YAXI@Z" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "" "=" __FUNCTION__)
+#pragma comment(linker, "/EXPORT:" "" "=" __FUNCTION__)
 }
 
 //#pragma comment(linker, "/EXPORT:" "" "=" __FUNCTION__)
 
 
 
-class CCommandLine
-{
-public:
-	// based on the defs in the 2013 source sdk, but for some reason has an extra function (may be another CreateCmdLine overload?)
-	// these seem to line up with what they should be though
-	virtual void CreateCmdLine(const char* commandline) {}
-	virtual void CreateCmdLine(int argc, char** argv) {}
-	virtual void ClearCmdLine(void) {}
-	virtual const char* GetCmdLine(void) const {}
 
-	virtual const char* CheckParm(const char* psz, const char** ppszValue = 0) const {}
-	virtual void RemoveParm(const char* parm) const {}
-	virtual void AppendParm(const char* pszParm, const char* pszValues) {}
 
-	virtual const char* ParmValue(const char* psz, const char* pDefaultVal = 0) const {}
-	virtual int ParmValue(const char* psz, int nDefaultVal) const {}
-	virtual float ParmValue(const char* psz, float flDefaultVal) const {}
 
-	virtual int ParmCount() const {}
-	virtual int FindParm(const char* psz) const {}
-	virtual const char* GetParm(int nIndex) const {}
-	virtual void SetParm(int nIndex, char const* pParm) {}
 
-	// virtual const char** GetParms() const {}
+
+struct CCommandLine {
+
+    
+    // based on the defs in the 2013 source sdk, but for some reason has an extra function (may be another CreateCmdLine overload?)
+    // these seem to line up with what they should be though
+    void (*CreateCmdLine)(void* thisPtr, const char* commandline) = 0;
+    void (*CreateCmdLine1)(void* thisPtr, int argc, char** argv) = 0;
+    void (*ClearCmdLine)(void* thisPtr) = 0;
+    const char* (*GetCmdLine)(void* thisPtr) = 0;
+
+    const char* (*CheckParm)(void* thisPtr, const char* psz, const char** ppszValue) = 0;
+    void (*RemoveParm)(void* thisPtr, const char* parm) = 0;
+    void (*AppendParm)(void* thisPtr, const char* pszParm, const char* pszValues) = 0;
+
+    const char* (*ParmValue)(void* thisPtr, const char* psz, const char* pDefaultVal) = 0;
+    int (*ParmValue1)(void* thisPtr, const char* psz, int nDefaultVal) = 0;
+    float (*ParmValue2)(void* thisPtr, const char* psz, float flDefaultVal) = 0;
+
+    int (*ParmCount)(void* thisPtr) = 0;
+    int (*FindParm)(void* thisPtr,const char* psz) = 0;
+    const char* (*GetParm)(void* thisPtr,int nIndex) = 0;
+    void (*SetParm)(void* thisPtr, int nIndex, char const* pParm) = 0;
+
+    // virtual const char** GetParms() const {}
+    
+
 };
 
 
@@ -221,138 +228,43 @@ extern "C" __declspec(dllexport) IMemAlloc* CreateGlobalMemAlloc() {
 
 extern "C" __declspec(dllexport) IMemAlloc* g_pMemAllocSingleton = 0;
 
+CCommandLine** commandLine = 0;
+CCommandLine* commandLineObj;
+
+int findParam(void* a1, const char* param) {
+    return 0;
+}
+
+const char* checkParam(void* a1, const char* param,const char** ret) {
+    return 0;
+}
+
+extern "C" __declspec(dllexport) CCommandLine * *CommandLine() {
+    if (!commandLine) {
+        commandLineObj = new CCommandLine;
+        commandLineObj->FindParm = findParam;
+        commandLineObj->CheckParm = checkParam;
+        commandLine = &commandLineObj;
+    }
+    return commandLine;
+}
 
 
-enum lexSymbols
+BOOL APIENTRY DllMain(HMODULE hModule,
+    DWORD  ul_reason_for_call,
+    LPVOID lpReserved
+)
 {
-    TK_SPACE = 0x20,
-    TK_EXCLAMATION_POINT = 0x21,
-    TK_DOUBLE_QUOTES = 0x22,
-    TK_HASHTAG = 0x23,
-    TK_DOLLAR_SIGN = 0x24,
-    TK_PERCENT_SIGN = 0x25,
-    TK_OPEN_BRACKET = 0x28,
-    TK_ClOSED_BRACKET = 0x29,
-    TK_STAR = 0x2A,
-    TK_FORWARD_SLASH = 0x2F,
-    TK_SEMICOLON = 0x3B,
-    TK_OPEN_CURLEY_BRACKET = 0x7B,
-    TK_IDENTIFIER = 0x102,
-    TK_STRING_LITERAL = 0x103,
-    TK_INTEGER = 0x104,
-    TK_FLOAT = 0x105,
-    TK_DELEGATE = 0x106,
-    TK_DELETE = 0x107,
-    TK_EQ = 0x108,
-    TK_NE = 0x109,
-    TK_LE = 0x10A,
-    TK_GE = 0x10B,
-    TK_SWITCH = 0x10C,
-    TK_ARROW = 0x10D,
-    TK_AND = 0x10E,
-    TK_OR = 0x10F,
-    TK_IF = 0x110,
-    TK_ELSE = 0x111,
-    TK_WHILE = 0x112,
-    TK_BREAK = 0x113,
-    TK_FOR = 0x114,
-    TK_DO = 0x115,
-    TK_NULL = 0x116,
-    TK_FOREACH = 0x117,
-    TK_IN = 0x118,
-    TK_NEWSLOT = 0x119,
-    TK_MODULO = 0x11A,
-    TK_LOCAL = 0x11B,
-    TK_CLONE = 0x11C,
-    TK_FUNCTION = 0x11D,
-    TK_RETURN = 0x11E,
-    TK_TYPEOF = 0x11F,
-    TK_UMINUS = 0x120,
-    TK_PLUSEQ = 0x121,
-    TK_MINUSEQ = 0x122,
-    TK_CONTINUE = 0x123,
-    TK_YIELD = 0x124,
-    TK_TRY = 0x125,
-    TK_CATCH = 0x126,
-    TK_THROW = 0x127,
-    TK_SHIFTL = 0x128,
-    TK_SHIFTR = 0x129,
-    TK_RESUME = 0x12A,
-    TK_DOUBLE_COLON = 0x12B,
-    TK_CASE = 0x12C,
-    TK_DEFAULT = 0x12D,
-    TK_THIS = 0x12E,
-    TK_PLUSPLUS = 0x12F,
-    TK_MINUSMINUS = 0x130,
-    TK_PARENT = 0x131,
-    TK_USHIFTR = 0x132,
-    TK_CLASS = 0x133,
-    TK_EXTENDS = 0x134,
-    TK_CONSTRUCTOR = 0x136,
-    TK_INSTANCEOF = 0x137,
-    TK_VARPARAMS = 0x138,
-    TK_VARGC = 0x139,
-    TK_VARGV = 0x13A,
-    TK_TRUE = 0x13B,
-    TK_FALSE = 0x13C,
-    TK_MULEQ = 0x13D,
-    TK_DIVEQ = 0x13E,
-    TK_MODEQ = 0x13F,
-    TK_ATTR_OPEN = 0x140,
-    TK_ATTR_CLOSE = 0x141,
-    TK_STATIC = 0x142,
-    TK_ENUM = 0x143,
-    TK_CONST = 0x144,
-    TK_THREAD = 0x145,
-    TK_WAIT_THREAD = 0x146,
-    TK_WAIT_THREAD_SOLO = 0x147,
-    TK_WAIT = 0x148,
-    TK_DELAY_THREAD = 0x149,
-    TK_ASSERT = 0x14A,
-    TK_VECTOR = 0x14B,
-    TK_NORMALIZE = 0x14C,
-    TK_NORM = 0x14D,
-    TK_DOT = 0x14E,
-    TK_CROSS = 0x151,
-    TK_LENGTH = 340,
-    TK_LENGHT_SQR = 341,
-    TK_LENGTH_2D = 0x156,
-    TK_LENGTH_2D_SQR = 0x157,
-    TK_DOTPRODUCT = 0x14F,
-    TK_DOTPRODUCT_2D = 0x150,
-    TK_DISTANCE = 344,
-    TK_DISTANCE_SQR = 345,
-    TK_DISTANCE_2D = 346,
-    TK_DISTANCE_2D_SQR = 347,
-    TK_KV = 348,
-    TK_NV = 349,
-    TK_UI = 350,
-    TK_GLOBAL = 351,
-    TK_GLOBALIZE_ALL_FUNCTIONS = 357,
-    TK_STRUCT = 358,
-    TK_INT = 359,
-    TK_FLOAT2 = 360,
-    TK_BOOL = 361,
-    TK_STRING = 362,
-    TK_VECTOR2 = 363,
-    TK_VAR = 364,
-    TK_TABLE = 365,
-    TK_ARRAY = 366,
-    TK_VOID = 367,
-    TK_ENTITY = 368,
-    TK_EXPECT = 369,
-    TK_UNREACHABLE = 370,
-    TK_FUNCTIONREF = 371,
-    TK_TYPEDEF = 372,
-    TK_ORNULL = 373,
-    TK_ASSET = 374,
-    TK_UNTYPED = 376,
-
-    TK_PREPRO_IF = 0x160,
-    TK_PREPRO_ELSEIF = 0x161,
-    TK_PREPRO_ELSE = 0x162,
-    TK_PREPRO_ENDIF = 0x163,
-    TK_PREPRO_DOCUMENT = 0x164,
 
     
-};
+
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
+    }
+    return TRUE;
+}
