@@ -9,6 +9,6 @@ Usage guide:
 
 2. For script files create a "base" and a "mods" directory in the same directory as the executable.
 
-3. Extract the scripts from the game into the base directory they are in "mp_common","frontend" and since the standalone runs on the map rise "mp_rise" is also needed
+3. Extract the scripts from the game into the base directory they are in "mp_common" and "frontend". Since the standalone runs on the map rise "mp_rise" is also needed
 
 4. Northstar mods and any other mods that may be used should be copyed to the mods folder
