@@ -10,6 +10,14 @@
 #include <map>
 #include <vector>
 
+struct CompileError {
+    bool errorDuringCompile;
+    std::string errorName;
+    std::string fileName;
+    int line;
+    int column;
+};
+
 // stolen from ttf2sdk: sqvm types
 typedef float SQFloat;
 typedef long SQInteger;
@@ -137,65 +145,9 @@ typedef __int64 (*sq_removefromstackType)(HSquirrelVM* sqvm);
 
 
 
-typedef char (*SQVMStartCallType)(HSquirrelVM* a1, SQClosure* a2, int a3, __int64 nInputParams, unsigned int a5, char a6);
-typedef long long (*SQVMCallErrorHandlerType)(HSquirrelVM* sqvm, SQObject* a2);
-typedef void (*sq_op_loadcopyType)(SQSharedState* a1, SQObject* a2, SQObject* a3);
-typedef bool (*sq_op_callType)(HSquirrelVM* a1, SQInstruction* a2, SQObject* a3, int* a4, ...);
-typedef long long (*sq_op_precallType)(HSquirrelVM* a1, SQInstruction* a2, SQObject* key);
-typedef char (*SQVMGetType)(HSquirrelVM* self, SQObject* key, SQObject* dest, SQObject* temp_reg, char a5, char a6);
-typedef int (*sub_35B80Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3);
-typedef char (*SQVMNewSlotType)(HSquirrelVM* sqvm, SQObject* self, SQObject* key, SQObject* val, char bstatic);
-typedef char (*sub_34CF0Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4);
-typedef char (*sq_op_setType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4, char a5);
-typedef bool (*sq_op_eqType)(__int64 a1, SQObject* a2, SQObject* a3);
-typedef char (*sub_2B590Type)(HSquirrelVM* a1, int a2, SQObject* a3, SQObject* a4, SQObject* a5);
-typedef long long (*sq_sqvm_ReturnType)(HSquirrelVM* a1, int _arg0, int _arg1, SQObject* retval);
-typedef SQObject* (*sq_copyObjectType)(SQObject* dest, SQObject* src);
-typedef SQTable* (*sq_createTableType)(SQSharedState* sharedState, unsigned int length);;
-typedef SQArray* (*sub_1800Type)(SQSharedState* a1, unsigned int a2);
-typedef long long (*sub_1A20Type)(SQArray* a1, SQObject* a2);
-typedef char (*sub_2F740Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3);
-typedef long long (*sub_2E670Type)(HSquirrelVM* a1, unsigned int a2, SQObject* a3, SQObject* a4, SQObject* a5);
-typedef bool (*sub_2B6C0Type)(HSquirrelVM* a1, __int64 a2, SQObject* a3, SQObject* a4, SQObject* a5);
-typedef char (*sub_2E960Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4, int a5);
-typedef char (*sq_op_increment_prefix_localType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, int a4);
-typedef char (*sp_op_increment_prefix_structfieldType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, int a4, int a5);
-typedef char (*sub_2EA30Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4, int a5);
-typedef char (*sub_2E860Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, int a4);
-typedef char (*sq_op_increment_postfix_structfieldType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, int a4, int a5);
-typedef char (*sub_2D1E0Type)(HSquirrelVM* a1, int a2, SQObject* a3, SQObject* a4, SQObject* dest);
-typedef char (*sub_2CF10Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3);
-typedef char (*sub_2F0B0Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3);
-typedef char (*sub_2EE20Type)(
-    HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4, SQObject* a5, int a6, int a7, int a8, CallInfo* a9);
-typedef char (*sub_2EF60Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4);
-typedef char (*sub_34A30Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3);
-typedef long long (*sub_2D950Type)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, __int64 a4);
-typedef long long (*sub_35800Type)(__int64* a1, int a2);
-typedef long long (*sub_2F2F0Type)(HSquirrelVM* a1, SQObject* a2, int a3, int a4);
-typedef long long (*sub_3EA70Type)(void* a1, SQObject* a2, SQObject* a3);
-typedef SQObject* (*SQVMToStringType)(HSquirrelVM* a1, SQObject* object, SQObject* res);
-typedef char (*sq_op_addType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4);
-typedef long long (*sq_dropStackType)(HSquirrelVM* a1, int a2);
-typedef long long (*sub_C6F0Type)(SQObject** a1, int a2);
-typedef long long (*sub_27390Type)(SQObject* a1, int a2);
-typedef SQStructInstance* (*sub_35B20Type)(HSquirrelVM* a1, SQObject* a2);
-typedef char (*sq_op_subType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4);
-typedef char (*sq_op_multiplicationType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4);
-typedef char (*sq_op_divType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4);
-typedef char (*sq_op_moduloType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, SQObject* a4);
-typedef char (*sq_compareType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, unsigned int* a4);
-typedef SQObject* (*sq_setObjectToFloatType)(SQObject* a1, float a2);
-typedef char (*sub_2E100Type)(HSquirrelVM* sqvm, __int64 a2, int a3, int a4, unsigned int a5);
-typedef char (*sq_nativecallType)(HSquirrelVM* sqvm, SQNativeClosure* closure, __int64 a3, unsigned int a4, SQObject* a5, bool* shouldSuspend, bool argCheck);
-typedef char (*sq_op_typecastType)(HSquirrelVM* a1, SQObject* a2, SQObject* a3, int a4);
-typedef char (*sq_op_check_entity_classType)(HSquirrelVM* a1, SQObject* a2, __int64 a3);
-typedef long long (*sub_29A40Type)(SQSharedState* sharedState, SQObject* a2, int* a3);
-typedef long long (*sub_63E00Type)(SQSharedState* a1, unsigned int a2, unsigned int* a3);
-typedef void (*sub_2EDB0Type)(HSquirrelVM* a1, __int16* a2);
-typedef SQString* (*sqStringTableAddType)(StringTable* a1, char* newString, int length);
-typedef long long (*sub_BEF0Type)(SQObject** a1, unsigned int a2, SQObject* a3);
-typedef long long (*SQVMRaise_ErrorType)(HSquirrelVM* a1, const char* a2, ...);
+typedef void (*CSquirrelVM_destroyType)(void);
+
+
 typedef void (*sq_rdbg_hookType)(
     SQDbgServer* dbgServer,
     HSquirrelVM* sqvm,
@@ -257,74 +209,13 @@ public:
 	sq_setuserdatatypeidType __sq_setuserdatatypeid;
     CSquirrelVM_InitType __CSquirrelVM_Init;
     sq_getconstantstableType __sq_getconstantstable;
+
     sq_removefromstackType __sq_removefromstack;
 
+    CSquirrelVM_destroyType __CSquirrelVM_Destory;
     void** setjmpPtr;
 
-    sq_instructionvectorreallocType __sq_instructionvectorrealloc;
-    //Functions fror customExecute
-    SQVMStartCallType __SQVMStartCall;
-    SQVMCallErrorHandlerType __SQVMCallErrorHandler;
-    sq_op_loadcopyType __sq_op_loadcopy;
-    sq_op_callType __sq_op_call;
-    sq_op_precallType __sq_op_precall;
-    SQVMGetType __SQVMGet;
-    sub_35B80Type __sub_35B80;
-    SQVMNewSlotType __SQVMNewSlot;
-    sub_34CF0Type __sub_34CF0;
-    sq_op_setType __sq_op_set;
-    sq_op_eqType __sq_op_eq;
-    sub_2B590Type __sub_2B590;
-    sq_sqvm_ReturnType __sq_sqvm_Return;
-    sq_copyObjectType __sq_copyObject;
-    sq_createTableType __sq_createTable;
-    sub_1800Type __sub_1800;
-    sub_1A20Type __sub_1A20;
-    sub_2F740Type __sub_2F740;
-    sub_2E670Type __sub_2E670;
-    sub_2B6C0Type __sub_2B6C0;
-    sub_2E960Type __sub_2E960;
-    sq_op_increment_prefix_localType __sq_op_increment_prefix_local;
-    sp_op_increment_prefix_structfieldType __sp_op_increment_prefix_structfield;
-    sub_2EA30Type __sq_op_increment_postfix;
-    sub_2E860Type __sq_op_increment_postfix_local;
-    sq_op_increment_postfix_structfieldType __sq_op_increment_postfix_structfield;
-    sub_2D1E0Type __sq_op_cmp;
-    sub_2CF10Type __sub_2CF10;
-    sub_2F0B0Type __sub_2F0B0;
-    sub_2EE20Type __sub_2EE20;
-    sub_2EF60Type __sub_2EF60;
-    sub_34A30Type __sub_34A30;
-    sub_2D950Type __sub_2D950;
-    sub_35800Type __sub_35800;
-    sub_2F2F0Type __sub_2F2F0;
-    sub_3EA70Type __sub_3EA70;
-    SQVMToStringType __SQVMToString;
-    sq_op_addType __sq_op_add;
-    sq_dropStackType __sq_dropStack;
-    sub_C6F0Type __sub_C6F0;
-    sub_27390Type __sub_27390;
-    sub_35B20Type __sub_35B20;
-    sq_op_subType __sq_op_sub;
-    sq_op_multiplicationType __sq_op_multiplication;
-    sq_op_divType __sq_op_div;
-    sq_op_moduloType __sq_op_modulo;
-    sq_compareType __sq_compare;
-    sq_setObjectToFloatType __sq_setObjectToFloat;
-    sub_2E100Type __sub_2E100;
-    sq_nativecallType __sq_nativecall;
-    sq_op_typecastType __sq_op_typecast;
-    sq_op_check_entity_classType __sq_op_check_entity_class;
-    sub_29A40Type __sub_29A40;
-    sub_63E00Type __sub_63E00;
-    sub_2EDB0Type __sub_2EDB0;
-    sqStringTableAddType __sqStringTableAdd;
-    sub_BEF0Type __sub_BEF0;
-    SQVMRaise_ErrorType __SQVMRaise_Error;
-    sq_rdbg_hookType __sq_rdbg_hook;
-    sq_rdbg_updateType __sq_rdbg_update;
 
-    SQObject* __globalClosure;
 #pragma endregion
 
 public:
@@ -336,6 +227,7 @@ public:
 	void AddFuncRegistration(std::string returnType, std::string name, std::string argTypes, std::string helpText, SQFunction func);
 	SQRESULT setupfunc(const SQChar* funcname);
 	void AddFuncOverride(std::string name, SQFunction func);
+    CompileError* compileTest();
 
 #pragma region SQVM func wrappers
 	inline void defconst(CSquirrelVM* sqvm, const SQChar* pName, int nValue)
@@ -478,18 +370,15 @@ public:
         return __sq_removefromstack(sqvm);
     }
 
-    inline SQInstruction* reallocinstructionvector(SQInstruction** vector, const SQInteger size)
-    {
-        return __sq_instructionvectorrealloc(vector, size);
-    }
+    CompileError lastCompileError;
 
-    inline void callLineDebugger(SQDbgServer* dbgServer, HSquirrelVM* sqvm, int line, const char* srcFileName) {
-        __sq_rdbg_hook(dbgServer, sqvm, 'l', line, srcFileName, 0, 0, 0);
-        if (dbgServer->_autoupdate && __sq_rdbg_update(dbgServer))
-            __sq_raiseerror(sqvm, "invalid socket");
-    }
+    
 #pragma endregion
 };
+
+
+
+
 
 template <ScriptContext context> SquirrelManager<context>* g_pSquirrel;
 
