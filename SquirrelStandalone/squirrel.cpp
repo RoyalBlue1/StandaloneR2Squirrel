@@ -263,28 +263,17 @@ void __fastcall ScriptCompileErrorHook(HSquirrelVM* sqvm, const char* error, con
 {
 	bool bIsFatalError = g_pSquirrel<context>->m_bFatalCompilationErrors;
     spdlog::error("Compile Error \"{}\" in file {} on line {} in column {}\n", error, file, line, column);
+    exit(-1);
     /*
-    SQTable* globalStructs = sqvm->sharedState->_structs._VAL.asTable;
-    for (int i = 0; i < globalStructs->_numOfNodes; i++) {
-        if (globalStructs->_nodes[i].key._Type == OT_STRING) {
-            spdlog::info("struct: {}", globalStructs->_nodes[i].key._VAL.asString->_val);
-        }
-    }
+    ScriptContext realContext = context;
+    if(realContext == ScriptContext::CLIENT && sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
+        realContext = ScriptContext::UI;
 
-    SQTable* files = sqvm->sharedState->_squirrelFiles._VAL.asTable;
-    for (int i = 0; i < files->_numOfNodes; i++) {
-        if (files->_nodes[i].key._Type == OT_STRING) {
-            spdlog::info("file: {}", files->_nodes[i].key._VAL.asString->_val);
-        }
-    }
-    */
-
-    SQTable* nativeClosures = sqvm->sharedState->_nativeClosures._VAL.asTable;
-    for (int i = 0; i < nativeClosures->_numOfNodes; i++) {
-        if (nativeClosures->_nodes[i].key._Type == OT_STRING) {
-            spdlog::info("file: {}", nativeClosures->_nodes[i].key._VAL.asString->_val);
-        }
-    }
+    g_pSquirrel<realContext>.lastCompileError.errorDuringCompile = true;
+    g_pSquirrel<realContext>.lastCompileError.errorName = std::string(error);
+    g_pSquirrel<realContext>.lastCompileError.fileName = std::string(file);
+    g_pSquirrel<realContext>.lastCompileError.line = line;
+    g_pSquirrel<realContext>.lastCompileError.column = column;*/
 }
 
 template <ScriptContext context>
@@ -378,7 +367,12 @@ template <ScriptContext context> bool __fastcall CallScriptInitCallbackHook(void
 	return ret;
 }
 
-
+template <ScriptContext context>CompileError* SquirrelManager<context>::compileTest() {
+    lastCompileError.errorDuringCompile = false;
+    startVM();
+    //__CSquirrelVM_Destory();
+    return &lastCompileError;
+}
 
 
 ON_DLL_LOAD("client.dll", ClientSquirrel, (CModule module))
@@ -452,6 +446,10 @@ ON_DLL_LOAD("client.dll", ClientSquirrel, (CModule module))
     g_pSquirrel<ScriptContext::UI>->__sq_getconstantstable = g_pSquirrel<ScriptContext::CLIENT>->__sq_getconstantstable;
     g_pSquirrel<ScriptContext::CLIENT>->__sq_removefromstack = module.Offset(0x7030).As<sq_removefromstackType>();
     g_pSquirrel<ScriptContext::UI>->__sq_removefromstack = g_pSquirrel<ScriptContext::CLIENT>->__sq_removefromstack;
+
+    g_pSquirrel<ScriptContext::CLIENT>->__CSquirrelVM_Destory = module.Offset(0x385400).As<CSquirrelVM_destroyType>();
+    g_pSquirrel<ScriptContext::UI>->__CSquirrelVM_Destory = module.Offset(0x3C84F0).As<CSquirrelVM_destroyType>();
+
     MAKEHOOK(
         module.Offset(0x108E0),
         &RegisterSquirrelFunctionHook<ScriptContext::CLIENT>,
@@ -522,72 +520,9 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
     g_pSquirrel<ScriptContext::SERVER>->setjmpPtr = module.Offset(0x23AAF10).As<void**>();
 
 
-    g_pSquirrel<ScriptContext::SERVER>->__sq_instructionvectorrealloc = module.Offset(0x69A20).As<sq_instructionvectorreallocType>();
 
-    g_pSquirrel<ScriptContext::SERVER>->__SQVMStartCall = module.Offset(0x2DD20).As<SQVMStartCallType>();
-    g_pSquirrel<ScriptContext::SERVER>->__SQVMCallErrorHandler = module.Offset(0x33A70).As<SQVMCallErrorHandlerType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_loadcopy = module.Offset(0x3d390).As<sq_op_loadcopyType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_call = module.Offset(0x2C440).As<sq_op_callType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_precall = module.Offset(0x2C2B0).As<sq_op_precallType>();
-    g_pSquirrel<ScriptContext::SERVER>->__SQVMGet = module.Offset(0x343A0).As<SQVMGetType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_35B80 = module.Offset(0x35B80).As<sub_35B80Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__SQVMNewSlot = module.Offset(0x34B30).As<SQVMNewSlotType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_34CF0 = module.Offset(0x34CF0).As<sub_34CF0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_set = module.Offset(0x34810).As<sq_op_setType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_eq = module.Offset(0x2F460).As<sq_op_eqType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2B590 = module.Offset(0x2B590).As<sub_2B590Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_sqvm_Return = module.Offset(0x2E490).As<sq_sqvm_ReturnType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_copyObject = module.Offset(0x1370).As<sq_copyObjectType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_createTable = module.Offset(0x1580).As<sq_createTableType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_1800 = module.Offset(0x1800).As<sub_1800Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_1A20 = module.Offset(0x1A20).As<sub_1A20Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2F740 = module.Offset(0x2F740).As<sub_2F740Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2E670 = module.Offset(0x2E670).As<sub_2E670Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2B6C0 = module.Offset(0x2B6C0).As<sub_2B6C0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2E960 = module.Offset(0x2E960).As<sub_2E960Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_increment_prefix_local = module.Offset(0x2E780).As<sq_op_increment_prefix_localType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sp_op_increment_prefix_structfield =
-        module.Offset(0x2EB70).As<sp_op_increment_prefix_structfieldType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_increment_postfix = module.Offset(0x2EA30).As<sub_2EA30Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_increment_postfix_local = module.Offset(0x2E860).As<sub_2E860Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_increment_postfix_structfield =
-        module.Offset(0x2EC60).As<sq_op_increment_postfix_structfieldType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_cmp = module.Offset(0x2D1E0).As<sub_2D1E0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2CF10 = module.Offset(0x2CF10).As<sub_2CF10Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2F0B0 = module.Offset(0x2F0B0).As<sub_2F0B0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2EE20 = module.Offset(0x2EE20).As<sub_2EE20Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2EF60 = module.Offset(0x2EF60).As<sub_2EF60Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_34A30 = module.Offset(0x34A30).As<sub_34A30Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2D950 = module.Offset(0x2D950).As<sub_2D950Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_35800 = module.Offset(0x35800).As<sub_35800Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2F2F0 = module.Offset(0x2F2F0).As<sub_2F2F0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_3EA70 = module.Offset(0x3EA70).As<sub_3EA70Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__SQVMToString = module.Offset(0x2D2D0).As<SQVMToStringType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_add = module.Offset(0x2BAF0).As<sq_op_addType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_dropStack = module.Offset(0x2B500).As<sq_dropStackType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_C6F0 = module.Offset(0xC6F0).As<sub_C6F0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_27390 = module.Offset(0x27390).As<sub_27390Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_35B20 = module.Offset(0x35B20).As<sub_35B20Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_sub = module.Offset(0x2BC80).As<sq_op_subType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_multiplication = module.Offset(0x2BE10).As<sq_op_multiplicationType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_div = module.Offset(0x2C020).As<sq_op_divType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_modulo = module.Offset(0x2C1C0).As<sq_op_moduloType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_compare = module.Offset(0x2D080).As<sq_compareType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_setObjectToFloat = module.Offset(0x27430).As<sq_setObjectToFloatType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2E100 = module.Offset(0x2E100).As<sub_2E100Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_nativecall = module.Offset(0x33E00).As<sq_nativecallType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_typecast = module.Offset(0x2F500).As<sq_op_typecastType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_op_check_entity_class = module.Offset(0x2F6B0).As<sq_op_check_entity_classType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_29A40 = module.Offset(0x29A40).As<sub_29A40Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_63E00 = module.Offset(0x63E00).As<sub_63E00Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_2EDB0 = module.Offset(0x2EDB0).As<sub_2EDB0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__sub_BEF0 = module.Offset(0xBEF0).As<sub_BEF0Type>();
-    g_pSquirrel<ScriptContext::SERVER>->__SQVMRaise_Error = module.Offset(0x35A10).As<SQVMRaise_ErrorType>();
-    g_pSquirrel<ScriptContext::SERVER>->__globalClosure = module.Offset(0xBCCE30).As<SQObject*>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_rdbg_hook = module.Offset(0x6F680).As<sq_rdbg_hookType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_rdbg_update = module.Offset(0x6C670).As<sq_rdbg_updateType>();
-
-
+    g_pSquirrel<ScriptContext::SERVER>->__CSquirrelVM_Destory = module.Offset(0x280DB0).As<CSquirrelVM_destroyType>();
+ 
 	MAKEHOOK(
 		module.Offset(0x1DD10),
 		&RegisterSquirrelFunctionHook<ScriptContext::SERVER>,
@@ -607,9 +542,4 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 }
 
 
-
-AUTOHOOK(sq_nativecall, server.dll + 0x33E00, char, __fastcall, (HSquirrelVM* sqvm, SQNativeClosure* closure, SQObject* obj, unsigned int a4, SQObject* a5, BYTE* a6, char a7)) {
-    printf("Calling Native: %s with string %016llx\n", closure->_name->_val,*(long long*)closure->value_70);
-    return sq_nativecall(sqvm, closure, obj, a4, a5, a6, a7);
-}
 

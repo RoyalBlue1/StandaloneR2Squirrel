@@ -3,7 +3,7 @@
 
 SquirrelFilesystem* g_filesystem;
 IFileSystem* g_fileInterface;
-
+std::map<std::string,std::string> fileCache;
 
 bool _ReadFromCache(IFileSystem* fileSystem, const char* path, void* result) {
     return false;
@@ -16,7 +16,14 @@ bool _ReadFile(IFileSystem::VTable2** fileSystem, const char* pFileName, const c
         data = g_pModManager->BuildScriptsRson();
     }
     else {
-        data = g_filesystem->ReadFileToString(fs::path(pFileName));
+        if (fileCache.count(std::string(pFileName))) {
+            data = fileCache[std::string(pFileName)];
+        }
+        else {
+            data = g_filesystem->ReadFileToString(fs::path(pFileName));
+            fileCache[std::string(pFileName)] = data;
+        }
+        
     }
     if (data.size() <= 1)
         return false;
@@ -36,3 +43,4 @@ IFileSystem::IFileSystem() {
     this->m_vtable->ReadFromCache = _ReadFromCache;
     this->m_vtable2->ReadFile = _ReadFile;
 }
+

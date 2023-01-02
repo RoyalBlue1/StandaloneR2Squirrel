@@ -5,4 +5,5 @@
 
 std::filesystem::path GetFilePrefix();
 void SetFilePrefix(std::filesystem::path prefix);
-void SetFilePrefixToCurrentDirectory();
+void SetFilePrefixToCurrentDirectory(std::filesystem::path modFolder);
+std::filesystem::path GetModFolder();

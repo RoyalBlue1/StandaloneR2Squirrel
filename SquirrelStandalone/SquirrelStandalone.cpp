@@ -65,7 +65,7 @@ bool LoadLibraries()
     auto exePath = GetExePathWide();
     if (!exePath.length())
     {
-        MessageBoxA(GetForegroundWindow(), "Failed getting Squirrel directory.\nThis Program will now close.", "Error", MB_ICONERROR);
+        //MessageBoxA(GetForegroundWindow(), "Failed getting Squirrel directory.\nThis Program will now close.", "Error", MB_ICONERROR);
         return false;
     }
 
@@ -81,7 +81,7 @@ bool LoadLibraries()
 }
 
 
-int main()
+int main(int argc,char**argv)
 {
     InitialiseCrashHandler();
     InstallInitialHooks();
@@ -90,22 +90,25 @@ int main()
 		return 1;
     
     CallAllPendingDLLLoadCallbacks();
-    SetFilePrefixToCurrentDirectory();
+    SetFilePrefixToCurrentDirectory(fs::path(argv[1]));
     g_pModManager = new ModManager();
     g_filesystem = new SquirrelFilesystem();
     
 
-    //g_pSquirrel<ScriptContext::SERVER>->startVM();
 
-    g_pSquirrel<ScriptContext::CLIENT>->startVM();
-    g_pSquirrel<ScriptContext::UI>->startVM();
-    g_pSquirrel<ScriptContext::SERVER>->startVM();
 
-    /*
-    g_pSquirrel<ScriptContext::SERVER>->ExecuteCode("CodeCallback_MapSpawn()");
-    g_pSquirrel<ScriptContext::SERVER>->ExecuteCode("GamemodeFD_Init()");
-    g_pSquirrel<ScriptContext::SERVER>->ExecuteCode("CodeCallback_PostEntityInit()");
-	*/
 
+
+    g_pSquirrel<ScriptContext::SERVER>->compileTest();
+    g_pSquirrel<ScriptContext::UI>->compileTest();
+    g_pSquirrel<ScriptContext::CLIENT>->compileTest();
+    spdlog::info("Compiled Successfully");
+
+
+
+
+
+
+    return 0;
 }
 

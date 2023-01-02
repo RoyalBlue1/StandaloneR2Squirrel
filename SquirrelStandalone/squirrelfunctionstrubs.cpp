@@ -5,8 +5,46 @@
 
 AUTOHOOK_INIT()
 
-AUTOHOOK(PrecacheModel, server.dll + 0x429550, __int64, _fastcall, (char* modelName)) {
-    printf("Tried to load %s\n", modelName);
+
+struct alignas(8) struct_memoryIDK
+{
+    int64_t qword_0;
+    int64_t qword_8;
+    int64_t *unknown_10;
+    int64_t gap_18[8000];
+    int32_t dword_FA18;
+    int8_t gap_FA1C[4];
+    int64_t qword_FA20;
+    int32_t dword_FA28;
+    int8_t gap_FA2C[4];
+    int64_t qword_FA30;
+    int64_t qword_FA38;
+    int64_t qword_FA40;
+    int32_t dword_FA48;
+    int8_t gap_FA4C[4];
+};
+
+struct struct_unknown
+{
+    void (__fastcall **ppfunc0)(struct_unknown*, int64_t);
+    int8_t gap_8[24];
+    int int20;
+    int8_t gap_24[12];
+    SQObject *pint64_30;
+    int8_t gap_38[8];
+    int64_t qword_40;
+    int64_t qword_48;
+    int64_t qword_50;
+    int64_t qword_58;
+};
+typedef __int64 (*sub_11110Type)(__int64 a1, SQObject *a2);
+sub_11110Type sub_11110;
+
+typedef __int64(*sub_52DF30Type)(__int64 a1, __int64 a2);
+sub_52DF30Type sub_52DF30;
+
+AUTOHOOK(PrecacheModel, server.dll + 0x429550, __int64, _fastcall, (const char* modelName)) {
+    spdlog::info("Tried to load {}", modelName);
     return 1;
 }
 
@@ -74,6 +112,10 @@ ON_DLL_LOAD("server.dll", ServerSquirrelStubs, (CModule module)) {
 ON_DLL_LOAD("client.dll", ClientSquirrelStubs, (CModule module)) {
     AUTOHOOK_DISPATCH_MODULE(client.dll)
         fixStuffForStandaloneClient(module);
+    sub_11110 = module.Offset(0x11110).As<sub_11110Type>();
+    sub_52DF30 = module.Offset(0x52DF30).As<sub_52DF30Type>();
+    *module.Offset(0x23E8248+92).As<int*>()= 0;
+
 }
 
 AUTOHOOK(loadDamageFlagsServer, server.dll + 0x6CC9F0, void*, __fastcall, (void)) {
@@ -114,7 +156,63 @@ AUTOHOOK(rson_evalWhenString, client.dll + 0x5C6900, __int64, __fastcall, (__int
 }
 */
 
-AUTOHOOK(isMp, client.dll + 0x26D9A0, bool, __fastcall, (void)) {
+AUTOHOOK(isMp, client.dll + 0x26D9A0, bool, __fastcall, (void)) 
+{
     return true;
 }
+
+
+//THIS SHOULD NOT BE FIXED LIKE THIS
+/*
+AUTOHOOK(sub_52DE40, client.dll +0x52DE40,void, __fastcall, (struct_memoryIDK *a1)) 
+{
+    struct_unknown *i; // rbx
+    __int64 v3; // rcx
+    __int64 v4; // rcx
+    __int64 v5; // rcx
+    SQObject *v6; // rdx
+    __int64 v7; // rsi
+    __int64 v8; // rax
+    __int64 v9; // rcx
+    while ( a1->dword_FA18 )
+    {
+        for ( i = (struct_unknown *)*((int64_t *)&a1->unknown_10 + (int)a1->dword_FA18);
+            i->qword_48;
+            sub_52DF30((__int64)a1, i->qword_48) )
+        {
+            ;
+        }
+        v3 = i->qword_50;
+        if ( v3 )
+            *(int64_t *)(v3 + 88) = i->qword_58;
+        v4 = i->qword_58;
+        if ( v4 )
+            *(int64_t *)(v4 + 80) = i->qword_50;
+        v5 = i->qword_40;
+        if ( v5 && *(struct_unknown **)(v5 + 72) == i )
+            *(int64_t *)(v5 + 72) = i->qword_58;
+        v6 = i->pint64_30;
+        v7 = i->int20;
+        i->int20 = -1;
+        if ( v6 != (SQObject *)-1i64 )
+            sub_11110(a1->qword_FA20, v6);
+        i->pint64_30 = (SQObject *)-1i64;
+        (*i->ppfunc0)(i, 1i64);
+        v8 = (int)--a1->dword_FA18;
+        if ( (int)v7 < (int)v8 )
+        {
+            v9 = a1->gap_18[v8];
+            a1->gap_18[v7] = v9;
+            *(int *)(v9 + 32) = v7;
+        }
+    }
+}
+
+
+AUTOHOOK(sub_3C80E0, client.dll + 0x3C80E0, char, __fastcall, (void)) {
+
+    spdlog::info("IT FUCKING RAN");
+    return sub_3C80E0();
+}
+*/
 

@@ -30,9 +30,6 @@
     <ClCompile Include="hook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scriptdatatables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="filesystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,10 +57,16 @@
     <ClCompile Include="squirrelfunctionstrubs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="customExecute.cpp">
+    <ClCompile Include="clientchathooks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="squirreldatatypes.cpp">
+    <ClCompile Include="scriptmainmenupromos.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scriptmodmenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripthttprequesthandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

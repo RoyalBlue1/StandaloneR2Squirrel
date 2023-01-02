@@ -139,8 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="clientchathooks.cpp" />
     <ClCompile Include="crashhandler.cpp" />
-    <ClCompile Include="customExecute.cpp" />
     <ClCompile Include="filesystem.cpp" />
     <ClCompile Include="fixConstants.cpp" />
     <ClCompile Include="hook.cpp" />
@@ -148,12 +148,13 @@
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="modmanager.cpp" />
     <ClCompile Include="prefix.cpp" />
-    <ClCompile Include="scriptdatatables.cpp" />
+    <ClCompile Include="scripthttprequesthandler.cpp" />
+    <ClCompile Include="scriptmainmenupromos.cpp" />
     <ClCompile Include="scriptserverutilitys.cpp" />
     <ClCompile Include="scriptsrson.cpp" />
     <ClCompile Include="serverchatmessage.cpp" />
+    <ClCompile Include="scriptmodmenu.cpp" />
     <ClCompile Include="squirrel.cpp" />
-    <ClCompile Include="squirreldatatypes.cpp" />
     <ClCompile Include="squirrelfunctionstrubs.cpp" />
     <ClCompile Include="SquirrelStandalone.cpp" />
   </ItemGroup>

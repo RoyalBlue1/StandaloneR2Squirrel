@@ -32,14 +32,14 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
     // fail if parse error
     if (modJson.HasParseError())
     {
-        printf("error reading mod %s", modDir.c_str());
+        spdlog::info("error reading mod {}", modDir.string());
         return;
     }
 
     // fail if it's not a json obj (could be an array, string, etc)
     if (!modJson.IsObject())
     {
-        printf("Failed reading mod file %s: file is not a JSON object", (modDir / "mod.json").c_str());
+        spdlog::info("Failed reading mod file {}: file is not a JSON object", (modDir / "mod.json").string());
         return;
     }
 
@@ -47,7 +47,7 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
     // name is required
     if (!modJson.HasMember("Name"))
     {
-        printf("Failed reading mod file %s: missing required member \"Name\"", (modDir / "mod.json").c_str());
+        spdlog::info("Failed reading mod file {}: missing required member \"Name\"", (modDir / "mod.json").string());
         return;
     }
 
@@ -63,7 +63,7 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
     else
     {
         Version = "0.0.0";
-        printf("Mod file %s is missing a version, consider adding a version", (modDir / "mod.json").c_str());
+        spdlog::info("Mod file {} is missing a version, consider adding a version", (modDir / "mod.json").string());
     }
 
     if (modJson.HasMember("DownloadLink"))
@@ -80,7 +80,7 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
         LoadPriority = modJson["LoadPriority"].GetInt();
     else
     {
-        printf("Mod file %s is missing a LoadPriority, consider adding one", (modDir / "mod.json").c_str());
+        spdlog::info("Mod file {} is missing a LoadPriority, consider adding one", (modDir / "mod.json").string());
         LoadPriority = 0;
     }
 
@@ -167,11 +167,11 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
             if (!v->name.IsString() || !v->value.IsString())
                 continue;
 
-            printf("Constant %s defined by %s for mod %s", v->name.GetString(), Name.c_str(), v->value.GetString());
+            spdlog::info("Constant {} defined by {} for mod {}", v->name.GetString(), Name.c_str(), v->value.GetString());
             if (DependencyConstants.find(v->name.GetString()) != DependencyConstants.end() &&
                 v->value.GetString() != DependencyConstants[v->name.GetString()])
             {
-                printf("A dependency constant with the same name already exists for another mod. Change the constant name.");
+                spdlog::info("A dependency constant with the same name already exists for another mod. Change the constant name.");
                 return;
             }
 
@@ -238,7 +238,7 @@ void ModManager::LoadMods()
         // fail if no mod json
         if (jsonStream.fail())
         {
-            printf("Mod %s has a directory but no mod.json", modDir.c_str());
+            spdlog::info("Mod {} has a directory but no mod.json", modDir.string());
             continue;
         }
 
@@ -253,7 +253,7 @@ void ModManager::LoadMods()
         {
             if (m_DependencyConstants.find(pair.first) != m_DependencyConstants.end() && m_DependencyConstants[pair.first] != pair.second)
             {
-                printf("Constant %s in mod %s already exists in another mod.\n", pair.first.c_str(), mod.Name.c_str());
+                spdlog::info("Constant {} in mod {} already exists in another mod.", pair.first, mod.Name);
                 mod.m_bWasReadSuccessfully = false;
                 break;
             }

@@ -8490,12 +8490,7 @@ AUTOHOOK(CSquirrelVM__InitConstantsClient, client.dll + 0x31AE00, __int64, __fas
     g_pSquirrel<ScriptContext::CLIENT>->pushinteger(sqvm, 1);
     g_pSquirrel<ScriptContext::CLIENT>->newslot(sqvm, -3, 0);
 
-    SQTable* globalStructs = sqvm->sharedState->_typedConstants._VAL.asTable;
-    for (int i = 0; i < globalStructs->_numOfNodes; i++) {
-        if (globalStructs->_nodes[i].key._Type == OT_STRING&& globalStructs->_nodes[i].val._Type == OT_BOOL) {
-            spdlog::info("global: {}:{}", globalStructs->_nodes[i].key._VAL.asString->_val, globalStructs->_nodes[i].val._VAL.asInteger);
-        }
-    }
+
 
 
     return g_pSquirrel<ScriptContext::CLIENT>->removeFromStack(sqvm);
