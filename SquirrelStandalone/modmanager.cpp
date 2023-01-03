@@ -167,7 +167,7 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
             if (!v->name.IsString() || !v->value.IsString())
                 continue;
 
-            spdlog::info("Constant {} defined by {} for mod {}", v->name.GetString(), Name.c_str(), v->value.GetString());
+            //spdlog::info("Constant {} defined by {} for mod {}", v->name.GetString(), Name.c_str(), v->value.GetString());
             if (DependencyConstants.find(v->name.GetString()) != DependencyConstants.end() &&
                 v->value.GetString() != DependencyConstants[v->name.GetString()])
             {
