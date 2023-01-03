@@ -416,7 +416,7 @@ std::string ModManager::NormaliseModFilePath(const fs::path path)
 
 fs::path GetModFolderPath()
 {
-    return fs::path(GetFilePrefix() / MOD_FOLDER_SUFFIX);
+    return fs::path(GetFilePrefix() / GetModFolder());
 }
 fs::path GetCompiledAssetsPath()
 {
