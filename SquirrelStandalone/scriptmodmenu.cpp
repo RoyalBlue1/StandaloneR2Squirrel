@@ -67,7 +67,7 @@ SQRESULT SQ_ReloadMods(HSquirrelVM* sqvm)
     return SQRESULT_NULL;
 }
 
-ON_DLL_LOAD_CLIENT_RELIESON("client.dll", ScriptModMenu, ClientSquirrel, (CModule module))
+ON_DLL_LOAD_RELIESON("client.dll", ScriptModMenu, ClientSquirrel, (CModule module))
 {
     g_pSquirrel<ScriptContext::UI>->AddFuncRegistration(
         "array<string>", "NSGetModNames", "", "Returns the names of all loaded mods", SQ_GetModNames);

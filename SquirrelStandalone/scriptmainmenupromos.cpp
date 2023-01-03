@@ -41,7 +41,7 @@ SQRESULT SQ_GetCustomMainMenuPromoData(HSquirrelVM* sqvm)
     return SQRESULT_NOTNULL;
 }
 
-ON_DLL_LOAD_CLIENT_RELIESON("client.dll", ScriptMainMenuPromos, ClientSquirrel, (CModule module))
+ON_DLL_LOAD_RELIESON("client.dll", ScriptMainMenuPromos, ClientSquirrel, (CModule module))
 {
     g_pSquirrel<ScriptContext::UI>->AddFuncRegistration("void", "NSRequestCustomMainMenuPromos", "", "", SQ_RequestCustomMainMenuPromos);
     g_pSquirrel<ScriptContext::UI>->AddFuncRegistration("bool", "NSHasCustomMainMenuPromoData", "", "", SQ_HasCustomMainMenuPromoData);

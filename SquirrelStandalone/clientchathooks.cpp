@@ -29,11 +29,11 @@ SQRESULT SQ_ChatWriteLine(HSquirrelVM* sqvm)
     return SQRESULT_NULL;
 }
 
-ON_DLL_LOAD_CLIENT_RELIESON("client.dll", ClientChatHooks, ClientSquirrel, (CModule module))
+ON_DLL_LOAD_RELIESON("client.dll", ClientChatHooks, ClientSquirrel, (CModule module))
 {
     AUTOHOOK_DISPATCH()
 
-        g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration("void", "NSChatWrite", "int context, string text", "", SQ_ChatWrite);
+    g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration("void", "NSChatWrite", "int context, string text", "", SQ_ChatWrite);
     g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration("void", "NSChatWriteRaw", "int context, string text", "", SQ_ChatWriteRaw);
     g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration("void", "NSChatWriteLine", "int context, string text", "", SQ_ChatWriteLine);
 }

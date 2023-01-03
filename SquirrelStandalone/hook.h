@@ -52,12 +52,7 @@ public:
 #define ON_DLL_LOAD(dllName, uniquestr, args) __ON_DLL_LOAD(dllName, eDllLoadCallbackSide::UNSIDED, uniquestr, "", args)
 #define ON_DLL_LOAD_RELIESON(dllName, uniquestr, reliesOn, args)                                                                           \
 	__ON_DLL_LOAD(dllName, eDllLoadCallbackSide::UNSIDED, uniquestr, __STR(reliesOn), args)
-#define ON_DLL_LOAD_CLIENT(dllName, uniquestr, args) __ON_DLL_LOAD(dllName, eDllLoadCallbackSide::CLIENT, uniquestr, "", args)
-#define ON_DLL_LOAD_CLIENT_RELIESON(dllName, uniquestr, reliesOn, args)                                                                    \
-	__ON_DLL_LOAD(dllName, eDllLoadCallbackSide::CLIENT, uniquestr, __STR(reliesOn), args)
-#define ON_DLL_LOAD_DEDI(dllName, uniquestr, args) __ON_DLL_LOAD(dllName, eDllLoadCallbackSide::DEDICATED_SERVER, uniquestr, "", args)
-#define ON_DLL_LOAD_DEDI_RELIESON(dllName, uniquestr, reliesOn, args)                                                                      \
-	__ON_DLL_LOAD(dllName, eDllLoadCallbackSide::DEDICATED_SERVER, uniquestr, __STR(reliesOn), args)
+
 
 // new macro hook stuff
 class __autohook;

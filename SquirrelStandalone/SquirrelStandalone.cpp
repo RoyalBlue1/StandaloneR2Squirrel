@@ -93,7 +93,7 @@ int main(int argc,char**argv)
     if(argc>=2)
         SetFilePrefixToCurrentDirectory(fs::path(argv[1]));
     else
-        SetFilePrefixToCurrentDirectory(fs::path("mods"))
+        SetFilePrefixToCurrentDirectory(fs::path("mods"));
     g_pModManager = new ModManager();
     g_filesystem = new SquirrelFilesystem();
     

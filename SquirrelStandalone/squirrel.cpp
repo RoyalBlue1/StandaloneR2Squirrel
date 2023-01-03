@@ -262,12 +262,13 @@ template <ScriptContext context>
 void __fastcall ScriptCompileErrorHook(HSquirrelVM* sqvm, const char* error, const char* file, int line, int column)
 {
 	bool bIsFatalError = g_pSquirrel<context>->m_bFatalCompilationErrors;
-    spdlog::error("Compile Error \"{}\" in file {} on line {} in column {}\n", error, file, line, column);
-    exit(-1);
-    /*
     ScriptContext realContext = context;
     if(realContext == ScriptContext::CLIENT && sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
         realContext = ScriptContext::UI;
+    spdlog::error("Compile Error \"{}\" in {} VM in file {} on line {} in column {}\n", error,GetContextName(realContext), file, line, column);
+    exit(-1);
+    /*
+    
 
     g_pSquirrel<realContext>.lastCompileError.errorDuringCompile = true;
     g_pSquirrel<realContext>.lastCompileError.errorName = std::string(error);
