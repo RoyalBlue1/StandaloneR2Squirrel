@@ -41,5 +41,8 @@ ON_DLL_LOAD_RELIESON("client.dll", PluginCommands, ClientSquirrel, (CModule modu
 
         g_pSquirrel<ScriptContext::UI>->AddFuncRegistration("asset","StringToAsset","string val","",SQ_FuncStub);
         g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration("asset","StringToAsset","string val","",SQ_FuncStub);
+
+        g_pSquirrel<ScriptContext::UI>->AddFuncRegistration("array<string>","NSGetModNames","","",SQ_FuncStub);
+        g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration("array<string>","NSGetModNames","","",SQ_FuncStub);
     }
 }

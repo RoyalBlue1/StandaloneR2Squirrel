@@ -35,4 +35,5 @@ ON_DLL_LOAD_RELIESON("server.dll", ServerChatHooks, ServerSquirrel, (CModule mod
         "int fromPlayerIndex, int toPlayerIndex, string text, bool isTeam, bool isDead, int messageType",
         "",
         SQ_BroadcastMessage);
+    g_pSquirrel<ScriptContext::SERVER>->AddFuncRegistration("array<string>","NSGetModNames","","",SQ_BroadcastMessage);
 }
