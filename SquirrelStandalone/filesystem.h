@@ -18,7 +18,7 @@ public:
     {
         fs::path normalizedPath = path.make_preferred();
         if (g_pModManager->m_ModFiles.count(normalizedPath.string())) {
-            path = GetFilePrefix()/GetModFolder()/g_pModManager->m_ModFiles[normalizedPath.string()].m_pOwningMod->Name/fs::path("mod")/ normalizedPath;
+            path = GetFilePrefix()/GetModFolder()/g_pModManager->m_ModFiles[normalizedPath.string()].m_pOwningMod->m_ModDirectory/fs::path("mod")/ normalizedPath;
         }
         else {
             path = GetFilePrefix()/ fs::path("base") / normalizedPath;
