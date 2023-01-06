@@ -75,7 +75,6 @@ bool LoadLibraries()
     LOAD_LIBRARY("tier0.dll");
     LOAD_LIBRARY("vstdlib.dll");
     LOAD_LIBRARY("server.dll");
-    LOAD_LIBRARY("client.dll");
     return true;
 
 }
@@ -94,6 +93,8 @@ int main(int argc,char**argv)
         SetFilePrefixToCurrentDirectory(fs::path(argv[1]));
     else
         SetFilePrefixToCurrentDirectory(fs::path("mods"));
+
+
     g_pModManager = new ModManager();
     g_filesystem = new SquirrelFilesystem();
     
@@ -102,10 +103,10 @@ int main(int argc,char**argv)
 
 
 
-    g_pSquirrel<ScriptContext::SERVER>->compileTest();
-    g_pSquirrel<ScriptContext::UI>->compileTest();
-    g_pSquirrel<ScriptContext::CLIENT>->compileTest();
-    spdlog::info("Compiled Successfully");
+    //CSquirrelVM* vm = createVM(0);
+    //ExecuteCode(vm,"test()");
+    
+    startVM();
 
 
 

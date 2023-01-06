@@ -84,12 +84,6 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
         LoadPriority = 0;
     }
 
-    // mod convars
-    if (modJson.HasMember("ConVars") && modJson["ConVars"].IsArray())
-    {
-        //TODO Readd convar system
-    }
-
     // mod scripts
     if (modJson.HasMember("Scripts") && modJson["Scripts"].IsArray())
     {
@@ -146,17 +140,6 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
             }
 
             Scripts.push_back(script);
-        }
-    }
-
-    if (modJson.HasMember("Localisation") && modJson["Localisation"].IsArray())
-    {
-        for (auto& localisationStr : modJson["Localisation"].GetArray())
-        {
-            if (!localisationStr.IsString())
-                continue;
-
-            LocalisationFiles.push_back(localisationStr.GetString());
         }
     }
 
@@ -283,27 +266,6 @@ void ModManager::LoadMods()
     // sort by load prio, lowest-highest
     std::sort(m_LoadedMods.begin(), m_LoadedMods.end(), [](Mod& a, Mod& b) { return a.LoadPriority < b.LoadPriority; });
 
-    for (Mod& mod : m_LoadedMods)
-    {
-        if (!mod.m_bEnabled)
-            continue;
-
-        // register convars
-        // for reloads, this is sorta barebones, when we have a good findconvar method, we could probably reset flags and stuff on
-        // preexisting convars note: we don't delete convars if they already exist because they're used for script stuff, unfortunately this
-        // causes us to leak memory on reload, but not much, potentially find a way to not do this at some point
-       
-
-        
-
-       
-
-        // read pdiff
-       
-
-        // read bink video paths
-        
-    }
 
     // in a seperate loop because we register mod files in reverse order, since mods loaded later should have their files prioritised
     for (int64_t i = m_LoadedMods.size() - 1; i > -1; i--)

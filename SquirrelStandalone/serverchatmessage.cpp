@@ -20,7 +20,7 @@ SQRESULT SQ_BroadcastMessage(HSquirrelVM* sqvm)
     return SQRESULT_NULL;
 }
 
-
+/*
 ON_DLL_LOAD_RELIESON("server.dll", ServerChatHooks, ServerSquirrel, (CModule module))
 {
     AUTOHOOK_DISPATCH_MODULE(server.dll)
@@ -37,3 +37,4 @@ ON_DLL_LOAD_RELIESON("server.dll", ServerChatHooks, ServerSquirrel, (CModule mod
         SQ_BroadcastMessage);
     g_pSquirrel<ScriptContext::SERVER>->AddFuncRegistration("array<string>","NSGetModNames","","",SQ_BroadcastMessage);
 }
+*/

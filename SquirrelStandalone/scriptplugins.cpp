@@ -5,7 +5,7 @@
 SQRESULT SQ_FuncStub(HSquirrelVM* sqvm) {
     return SQRESULT_NULL;
 }
-
+/*
 ON_DLL_LOAD_RELIESON("client.dll", PluginCommands, ClientSquirrel, (CModule module))
 {
     // i swear there's a way to make this not have be run in 2 contexts but i can't figure it out
@@ -46,3 +46,4 @@ ON_DLL_LOAD_RELIESON("client.dll", PluginCommands, ClientSquirrel, (CModule modu
         g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration("array<string>","NSGetModNames","","",SQ_FuncStub);
     }
 }
+*/

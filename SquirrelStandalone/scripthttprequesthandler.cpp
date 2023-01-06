@@ -9,7 +9,7 @@
 
 
 
-
+/*
 
 template <ScriptContext context> void RegisterSQFuncs()
 {
@@ -37,7 +37,7 @@ template <ScriptContext context> void RegisterSQFuncs()
         "-allowlocalhttp.",
         SQ_IsLocalHttpAllowed<context>);
 }
-
+*/
 // int NS_InternalMakeHttpRequest(int method, string baseUrl, table<string, string> headers, table<string, string> queryParams,
 //	string contentType, string body, int timeout, string userAgent)
 template <ScriptContext context> SQRESULT SQ_InternalMakeHttpRequest(HSquirrelVM* sqvm)
@@ -59,7 +59,7 @@ template <ScriptContext context> SQRESULT SQ_IsLocalHttpAllowed(HSquirrelVM* sqv
     g_pSquirrel<context>->pushbool(sqvm, false);
     return SQRESULT_NOTNULL;
 }
-
+/*
 ON_DLL_LOAD_RELIESON("client.dll", HttpRequestHandler_ClientInit, ClientSquirrel, (CModule module))
 {
     RegisterSQFuncs<ScriptContext::CLIENT>();
@@ -71,3 +71,4 @@ ON_DLL_LOAD_RELIESON("server.dll", HttpRequestHandler_ServerInit, ServerSquirrel
     RegisterSQFuncs<ScriptContext::SERVER>();
 }
 
+*/

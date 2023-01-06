@@ -29,6 +29,10 @@ const char* GetContextName(ScriptContext context)
 	}
 }
 
+SQRESULT SQStub(HSquirrelVM* sqvm) {
+    return SQRESULT_NULL;
+}
+
 eSQReturnType SQReturnTypeFromString(const char* pReturnType)
 {
 	static const std::map<std::string, eSQReturnType> sqReturnTypeNameToString = {
@@ -100,381 +104,107 @@ const char* SQTypeNameFromID(int type)
 	return "";
 }
 
-// needed to define implementations for squirrelmanager outside of squirrel.h without compiler errors
-template class SquirrelManager<ScriptContext::SERVER>;
-template class SquirrelManager<ScriptContext::CLIENT>;
-template class SquirrelManager<ScriptContext::UI>;
+RegisterSquirrelFuncType RegisterSquirrelFunc;
+sq_defconstType __sq_defconst;
 
-template <ScriptContext context> void SquirrelManager<context>::VMCreated(CSquirrelVM* newSqvm)
+sq_compilebufferType __sq_compilebuffer;
+sq_callType __sq_call;
+sq_raiseerrorType __sq_raiseerror;
+
+sq_newarrayType __sq_newarray;
+sq_arrayappendType __sq_arrayappend;
+
+sq_newtableType __sq_newtable;
+sq_newslotType __sq_newslot;
+
+sq_pushroottableType __sq_pushroottable;
+sq_pushstringType __sq_pushstring;
+sq_pushintegerType __sq_pushinteger;
+sq_pushfloatType __sq_pushfloat;
+sq_pushboolType __sq_pushbool;
+sq_pushassetType __sq_pushasset;
+sq_pushvectorType __sq_pushvector;
+
+sq_getstringType __sq_getstring;
+sq_getintegerType __sq_getinteger;
+sq_getfloatType __sq_getfloat;
+sq_getboolType __sq_getbool;
+sq_getType __sq_get;
+sq_getassetType __sq_getasset;
+sq_getuserdataType __sq_getuserdata;
+sq_getvectorType __sq_getvector;
+
+sq_createuserdataType __sq_createuserdata;
+sq_setuserdatatypeidType __sq_setuserdatatypeid;
+CSquirrelVM_InitType __CSquirrelVM_Init;
+sq_getconstantstableType __sq_getconstantstable;
+
+sq_removefromstackType __sq_removefromstack;
+
+CSquirrelVM_destroyType __CSquirrelVM_Destory;
+CSquirrelVM_createType __CSquirrelVM_Create;
+
+void ExecuteCode(CSquirrelVM* pSQVM,const char* pCode)
 {
-	m_pSQVM = newSqvm;
-
-	for (SQFuncRegistration* funcReg : m_funcRegistrations)
-	{
-		RegisterSquirrelFunc(m_pSQVM, funcReg, 1);
-	}
-
-	for (auto& pair : g_pModManager->m_DependencyConstants)
-	{
-		bool bWasFound = false;
-		for (Mod& dependency : g_pModManager->m_LoadedMods)
-		{
-			if (!dependency.m_bEnabled)
-				continue;
-
-			if (dependency.Name == pair.second)
-			{
-				bWasFound = true;
-				break;
-			}
-		}
-
-		defconst(m_pSQVM, pair.first.c_str(), bWasFound);
-	}
-}
-
-template <ScriptContext context> void SquirrelManager<context>::VMDestroyed()
-{
-	m_pSQVM = nullptr;
-}
-
-template <ScriptContext context> void SquirrelManager<context>::ExecuteCode(const char* pCode)
-{
-	if (!m_pSQVM || !m_pSQVM->sqvm)
+	if (!pSQVM || !pSQVM->sqvm)
 	{
 				return;
 	}
 
-	
 	std::string strCode(pCode);
 	CompileBufferState bufferState = CompileBufferState(strCode);
 
-	SQRESULT compileResult = compilebuffer(&bufferState, "console");
+	SQRESULT compileResult = compilebuffer(pSQVM->sqvm,&bufferState, "console");
 	
 	if (compileResult != SQRESULT_ERROR)
 	{
-		pushroottable(m_pSQVM->sqvm);
-		SQRESULT callResult = call(m_pSQVM->sqvm, 0);
-			}
+		pushroottable(pSQVM->sqvm);
+		SQRESULT callResult = call(pSQVM->sqvm, 0);
+	}
 }
 
-template <ScriptContext context> void SquirrelManager<context>::AddFuncRegistration(
-    std::string returnType, std::string name, std::string argTypes, std::string helpText, SQFunction func)
-{
 
-    SQFuncRegistration* reg = new SQFuncRegistration;
-
-    reg->squirrelFuncName = new char[name.size() + 1];
-    strcpy((char*)reg->squirrelFuncName, name.c_str());
-    reg->cppFuncName = reg->squirrelFuncName;
-
-    reg->helpText = new char[helpText.size() + 1];
-    strcpy((char*)reg->helpText, helpText.c_str());
-
-    reg->returnTypeString = new char[returnType.size() + 1];
-    strcpy((char*)reg->returnTypeString, returnType.c_str());
-    reg->returnType = SQReturnTypeFromString(returnType.c_str());
-
-    reg->argTypes = new char[argTypes.size() + 1];
-    strcpy((char*)reg->argTypes, argTypes.c_str());
-
-    reg->funcPtr = func;
-
-    m_funcRegistrations.push_back(reg);
-}
-
-template <ScriptContext context> SQRESULT SquirrelManager<context>::setupfunc(const SQChar* funcname)
-{
-	pushroottable(m_pSQVM->sqvm);
-	pushstring(m_pSQVM->sqvm, funcname, -1);
-
-	SQRESULT result = get(m_pSQVM->sqvm, -2);
-	if (result != SQRESULT_ERROR)
-		pushroottable(m_pSQVM->sqvm);
-
-	return result;
-}
-
-template <ScriptContext context> void SquirrelManager<context>::AddFuncOverride(std::string name, SQFunction func)
-{
-	m_funcOverrides[name] = func;
-}
-
-// hooks
-bool IsUIVM(ScriptContext context, HSquirrelVM* pSqvm)
-{
-	return context != ScriptContext::SERVER && g_pSquirrel<ScriptContext::UI>->m_pSQVM &&
-		g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm == pSqvm;
-}
-
-template <ScriptContext context> void* (*__fastcall sq_compiler_create)(HSquirrelVM* sqvm, void* a2, void* a3, SQBool bShouldThrowError);
-template <ScriptContext context> void* __fastcall sq_compiler_createHook(HSquirrelVM* sqvm, void* a2, void* a3, SQBool bShouldThrowError)
-{
-	// store whether errors generated from this compile should be fatal
-	if (IsUIVM(context, sqvm))
-		g_pSquirrel<ScriptContext::UI>->m_bFatalCompilationErrors = bShouldThrowError;
-	else
-		g_pSquirrel<context>->m_bFatalCompilationErrors = bShouldThrowError;
-
-	return sq_compiler_create<context>(sqvm, a2, a3, bShouldThrowError);
-}
-
-template <ScriptContext context> SQInteger(*SQPrint)(HSquirrelVM* sqvm, const char* fmt);
-template <ScriptContext context> SQInteger SQPrintHook(HSquirrelVM* sqvm, const char* fmt, ...)
+AUTOHOOK(SQPrintFunc_Server,server.dll + 0x1FE90,SQInteger,__fastcall,(HSquirrelVM* sqvm, const char* fmt, ...))
 {
 	va_list va;
 	va_start(va, fmt);
-	vprintf( fmt, va);
-    //printf("\n");
+    char buffer[4096];
+	vsprintf_s(buffer, 4096, fmt, va);
+    spdlog::info("[Server] {}", std::string(buffer));
 	va_end(va);
 	return 0;
 }
 
-template <ScriptContext context> CSquirrelVM* (*__fastcall CreateNewVM)(void* a1, ScriptContext realContext);
-template <ScriptContext context> CSquirrelVM* __fastcall CreateNewVMHook(void* a1, ScriptContext realContext)
+AUTOHOOK(SQPrintFunc_Client,server.dll + 0x1FF30,SQInteger,__fastcall,(HSquirrelVM* sqvm, const char* fmt, ...))
 {
-	CSquirrelVM* sqvm = CreateNewVM<context>(a1, realContext);
-	if (realContext == ScriptContext::UI)
-		g_pSquirrel<ScriptContext::UI>->VMCreated(sqvm);
-	else
-		g_pSquirrel<context>->VMCreated(sqvm);
-
-		return sqvm;
+    va_list va;
+    va_start(va, fmt);
+    char buffer[4096];
+    vsprintf_s(buffer, 4096, fmt, va);
+    spdlog::info("[Client] {}", std::string(buffer));
+    va_end(va);
+    return 0;
 }
 
-template <ScriptContext context> void (*__fastcall DestroyVM)(void* a1, HSquirrelVM* sqvm);
-template <ScriptContext context> void __fastcall DestroyVMHook(void* a1, HSquirrelVM* sqvm)
+AUTOHOOK(SQPrintFunc_UI,server.dll + 0x1FFD0,SQInteger,__fastcall,(HSquirrelVM* sqvm, const char* fmt, ...))
 {
-	ScriptContext realContext = context; // ui and client use the same function so we use this for prints
-	if (IsUIVM(context, sqvm))
-	{
-		realContext = ScriptContext::UI;
-		g_pSquirrel<ScriptContext::UI>->VMDestroyed();
-	}
-	else
-		DestroyVM<context>(a1, sqvm);
+    va_list va;
+    va_start(va, fmt);
+    char buffer[4096];
+    vsprintf_s(buffer, 4096, fmt, va);
+    spdlog::info("[UI] {}", std::string(buffer));
+    va_end(va);
+    return 0;
+}
 
-	}
 
-template <ScriptContext context>
-void (*__fastcall SQCompileError)(HSquirrelVM* sqvm, const char* error, const char* file, int line, int column);
-template <ScriptContext context>
-void __fastcall ScriptCompileErrorHook(HSquirrelVM* sqvm, const char* error, const char* file, int line, int column)
+
+AUTOHOOK(ScriptCompileError,server.dll+0x799E0,void,__fastcall,(HSquirrelVM* sqvm, const char* error, const char* file, int line, int column))
 {
-	bool bIsFatalError = g_pSquirrel<context>->m_bFatalCompilationErrors;
-    ScriptContext realContext = context;
-    if(realContext == ScriptContext::CLIENT && sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
-        realContext = ScriptContext::UI;
-    spdlog::error("Compile Error \"{}\" in {} VM in file {} on line {} in column {}\n", error,GetContextName(realContext), file, line, column);
+    spdlog::error("Compile Error \"{}\" in {} VM in file {} on line {} in column {}\n", error,GetContextName((ScriptContext)sqvm->sharedState->cSquirrelVM->vmContext), file, line, column);
     exit(-1);
-    /*
-    
-
-    g_pSquirrel<realContext>.lastCompileError.errorDuringCompile = true;
-    g_pSquirrel<realContext>.lastCompileError.errorName = std::string(error);
-    g_pSquirrel<realContext>.lastCompileError.fileName = std::string(file);
-    g_pSquirrel<realContext>.lastCompileError.line = line;
-    g_pSquirrel<realContext>.lastCompileError.column = column;*/
 }
 
-template <ScriptContext context>
-int64_t(*__fastcall RegisterSquirrelFunction)(CSquirrelVM* sqvm, SQFuncRegistration* funcReg, char unknown);
-template <ScriptContext context>
-int64_t __fastcall RegisterSquirrelFunctionHook(CSquirrelVM* sqvm, SQFuncRegistration* funcReg, char unknown)
-{
-	if (IsUIVM(context, sqvm->sqvm))
-	{
-		if (g_pSquirrel<ScriptContext::UI>->m_funcOverrides.count(funcReg->squirrelFuncName))
-		{
-			g_pSquirrel<ScriptContext::UI>->m_funcOriginals[funcReg->squirrelFuncName] = funcReg->funcPtr;
-			funcReg->funcPtr = g_pSquirrel<ScriptContext::UI>->m_funcOverrides[funcReg->squirrelFuncName];
-					}
-
-		return g_pSquirrel<ScriptContext::UI>->RegisterSquirrelFunc(sqvm, funcReg, unknown);
-	}
-
-	if (g_pSquirrel<context>->m_funcOverrides.find(funcReg->squirrelFuncName) != g_pSquirrel<context>->m_funcOverrides.end())
-	{
-		g_pSquirrel<context>->m_funcOriginals[funcReg->squirrelFuncName] = funcReg->funcPtr;
-		funcReg->funcPtr = g_pSquirrel<context>->m_funcOverrides[funcReg->squirrelFuncName];
-			}
-
-	return g_pSquirrel<context>->RegisterSquirrelFunc(sqvm, funcReg, unknown);
-}
-
-
-
-
-template <ScriptContext context> bool (*__fastcall CallScriptInitCallback)(void* sqvm, const char* callback);
-template <ScriptContext context> bool __fastcall CallScriptInitCallbackHook(void* sqvm, const char* callback)
-{
-	ScriptContext realContext = context;
-	bool bShouldCallCustomCallbacks = true;
-
-	if (context == ScriptContext::CLIENT)
-	{
-		if (!strcmp(callback, "UICodeCallback_UIInit"))
-			realContext = ScriptContext::UI;
-		else if (strcmp(callback, "ClientCodeCallback_MapSpawn"))
-			bShouldCallCustomCallbacks = false;
-	}
-	else if (context == ScriptContext::SERVER)
-		bShouldCallCustomCallbacks = !strcmp(callback, "CodeCallback_MapSpawn");
-
-	if (bShouldCallCustomCallbacks)
-	{
-		for (Mod mod : g_pModManager->m_LoadedMods)
-		{
-			if (!mod.m_bEnabled)
-				continue;
-
-			for (ModScript script : mod.Scripts)
-			{
-				for (ModScriptCallback modCallback : script.Callbacks)
-				{
-					if (modCallback.Context == realContext && modCallback.BeforeCallback.length())
-					{
-						CallScriptInitCallback<context>(sqvm, modCallback.BeforeCallback.c_str());
-					}
-				}
-			}
-		}
-	}
-
-
-	bool ret = CallScriptInitCallback<context>(sqvm, callback);
-
-	// run after callbacks
-	if (bShouldCallCustomCallbacks)
-	{
-		for (Mod mod : g_pModManager->m_LoadedMods)
-		{
-			if (!mod.m_bEnabled)
-				continue;
-
-			for (ModScript script : mod.Scripts)
-			{
-				for (ModScriptCallback modCallback : script.Callbacks)
-				{
-					if (modCallback.Context == realContext && modCallback.AfterCallback.length())
-					{
-						CallScriptInitCallback<context>(sqvm, modCallback.AfterCallback.c_str());
-					}
-				}
-			}
-		}
-	}
-
-	return ret;
-}
-
-template <ScriptContext context>CompileError* SquirrelManager<context>::compileTest() {
-    lastCompileError.errorDuringCompile = false;
-    startVM();
-    //__CSquirrelVM_Destory();
-    return &lastCompileError;
-}
-
-
-ON_DLL_LOAD("client.dll", ClientSquirrel, (CModule module))
-{
-    AUTOHOOK_DISPATCH_MODULE(client.dll)
-
-        g_pSquirrel<ScriptContext::CLIENT> = new SquirrelManager<ScriptContext::CLIENT>;
-    g_pSquirrel<ScriptContext::UI> = new SquirrelManager<ScriptContext::UI>;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_defconst = module.Offset(0x12120).As<sq_defconstType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_defconst = g_pSquirrel<ScriptContext::CLIENT>->__sq_defconst;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_compilebuffer = module.Offset(0x3110).As<sq_compilebufferType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_pushroottable = module.Offset(0x5860).As<sq_pushroottableType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_compilebuffer = g_pSquirrel<ScriptContext::CLIENT>->__sq_compilebuffer;
-    g_pSquirrel<ScriptContext::UI>->__sq_pushroottable = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushroottable;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_call = module.Offset(0x8650).As<sq_callType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_call = g_pSquirrel<ScriptContext::CLIENT>->__sq_call;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_newarray = module.Offset(0x39F0).As<sq_newarrayType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_arrayappend = module.Offset(0x3C70).As<sq_arrayappendType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_newarray = g_pSquirrel<ScriptContext::CLIENT>->__sq_newarray;
-    g_pSquirrel<ScriptContext::UI>->__sq_arrayappend = g_pSquirrel<ScriptContext::CLIENT>->__sq_arrayappend;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_newtable = module.Offset(0x3960).As<sq_newtableType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_newslot = module.Offset(0x70B0).As<sq_newslotType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_newtable = g_pSquirrel<ScriptContext::CLIENT>->__sq_newtable;
-    g_pSquirrel<ScriptContext::UI>->__sq_newslot = g_pSquirrel<ScriptContext::CLIENT>->__sq_newslot;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_pushstring = module.Offset(0x3440).As<sq_pushstringType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_pushinteger = module.Offset(0x36A0).As<sq_pushintegerType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_pushfloat = module.Offset(0x3800).As<sq_pushfloatType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_pushbool = module.Offset(0x3710).As<sq_pushboolType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_pushasset = module.Offset(0x3560).As<sq_pushassetType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_pushvector = module.Offset(0x3780).As<sq_pushvectorType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_raiseerror = module.Offset(0x8470).As<sq_raiseerrorType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_pushstring = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushstring;
-    g_pSquirrel<ScriptContext::UI>->__sq_pushinteger = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushinteger;
-    g_pSquirrel<ScriptContext::UI>->__sq_pushfloat = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushfloat;
-    g_pSquirrel<ScriptContext::UI>->__sq_pushbool = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushbool;
-    g_pSquirrel<ScriptContext::UI>->__sq_pushvector = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushvector;
-    g_pSquirrel<ScriptContext::UI>->__sq_pushasset = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushasset;
-    g_pSquirrel<ScriptContext::UI>->__sq_raiseerror = g_pSquirrel<ScriptContext::CLIENT>->__sq_raiseerror;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getstring = module.Offset(0x60C0).As<sq_getstringType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getinteger = module.Offset(0x60E0).As<sq_getintegerType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getfloat = module.Offset(0x6100).As<sq_getfloatType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getbool = module.Offset(0x6130).As<sq_getboolType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_get = module.Offset(0x7C30).As<sq_getType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getasset = module.Offset(0x6010).As<sq_getassetType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getuserdata = module.Offset(0x63D0).As<sq_getuserdataType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getvector = module.Offset(0x6140).As<sq_getvectorType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_getstring = g_pSquirrel<ScriptContext::CLIENT>->__sq_getstring;
-    g_pSquirrel<ScriptContext::UI>->__sq_getinteger = g_pSquirrel<ScriptContext::CLIENT>->__sq_getinteger;
-    g_pSquirrel<ScriptContext::UI>->__sq_getfloat = g_pSquirrel<ScriptContext::CLIENT>->__sq_getfloat;
-    g_pSquirrel<ScriptContext::UI>->__sq_getbool = g_pSquirrel<ScriptContext::CLIENT>->__sq_getbool;
-    g_pSquirrel<ScriptContext::UI>->__sq_get = g_pSquirrel<ScriptContext::CLIENT>->__sq_get;
-    g_pSquirrel<ScriptContext::UI>->__sq_getasset = g_pSquirrel<ScriptContext::CLIENT>->__sq_getasset;
-    g_pSquirrel<ScriptContext::UI>->__sq_getuserdata = g_pSquirrel<ScriptContext::CLIENT>->__sq_getuserdata;
-    g_pSquirrel<ScriptContext::UI>->__sq_getvector = g_pSquirrel<ScriptContext::CLIENT>->__sq_getvector;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_createuserdata = module.Offset(0x38D0).As<sq_createuserdataType>();
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_setuserdatatypeid = module.Offset(0x6490).As<sq_setuserdatatypeidType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_createuserdata = g_pSquirrel<ScriptContext::CLIENT>->__sq_createuserdata;
-    g_pSquirrel<ScriptContext::UI>->__sq_setuserdatatypeid = g_pSquirrel<ScriptContext::CLIENT>->__sq_setuserdatatypeid;
-    g_pSquirrel<ScriptContext::CLIENT>->__CSquirrelVM_Init = module.Offset(0x384F90).As<CSquirrelVM_InitType>();
-    g_pSquirrel<ScriptContext::UI>->__CSquirrelVM_Init = module.Offset(0x3C8390).As<CSquirrelVM_InitType>();
-
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_getconstantstable = module.Offset(0x5940).As<sq_getconstantstableType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_getconstantstable = g_pSquirrel<ScriptContext::CLIENT>->__sq_getconstantstable;
-    g_pSquirrel<ScriptContext::CLIENT>->__sq_removefromstack = module.Offset(0x7030).As<sq_removefromstackType>();
-    g_pSquirrel<ScriptContext::UI>->__sq_removefromstack = g_pSquirrel<ScriptContext::CLIENT>->__sq_removefromstack;
-
-    g_pSquirrel<ScriptContext::CLIENT>->__CSquirrelVM_Destory = module.Offset(0x385400).As<CSquirrelVM_destroyType>();
-    g_pSquirrel<ScriptContext::UI>->__CSquirrelVM_Destory = module.Offset(0x3C84F0).As<CSquirrelVM_destroyType>();
-
-    MAKEHOOK(
-        module.Offset(0x108E0),
-        &RegisterSquirrelFunctionHook<ScriptContext::CLIENT>,
-        &g_pSquirrel<ScriptContext::CLIENT>->RegisterSquirrelFunc);
-    g_pSquirrel<ScriptContext::UI>->RegisterSquirrelFunc = g_pSquirrel<ScriptContext::CLIENT>->RegisterSquirrelFunc;
-
-    // uiscript_reset concommand: don't loop forever if compilation fails
-    module.Offset(0x3C6E4C).NOP(6);
-
-    MAKEHOOK(module.Offset(0x8AD0), &sq_compiler_createHook<ScriptContext::CLIENT>, &sq_compiler_create<ScriptContext::CLIENT>);
-
-    MAKEHOOK(module.Offset(0x12B00), &SQPrintHook<ScriptContext::CLIENT>, &SQPrint<ScriptContext::CLIENT>);
-    MAKEHOOK(module.Offset(0x12BA0), &SQPrintHook<ScriptContext::UI>, &SQPrint<ScriptContext::UI>);
-
-    MAKEHOOK(module.Offset(0x26130), &CreateNewVMHook<ScriptContext::CLIENT>, &CreateNewVM<ScriptContext::CLIENT>);
-    MAKEHOOK(module.Offset(0x26E70), &DestroyVMHook<ScriptContext::CLIENT>, &DestroyVM<ScriptContext::CLIENT>);
-    MAKEHOOK(module.Offset(0x79A50), &ScriptCompileErrorHook<ScriptContext::CLIENT>, &SQCompileError<ScriptContext::CLIENT>);
-
-    MAKEHOOK(module.Offset(0x10190), &CallScriptInitCallbackHook<ScriptContext::CLIENT>, &CallScriptInitCallback<ScriptContext::CLIENT>);
-
-
-
-
-}
 
 ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 {
@@ -482,65 +212,201 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
     //printf("server.dll loaded and Squirrel initialized\n");
 
 
-	g_pSquirrel<ScriptContext::SERVER> = new SquirrelManager<ScriptContext::SERVER>;
 
-	g_pSquirrel<ScriptContext::SERVER>->__sq_defconst = module.Offset(0x1F550).As<sq_defconstType>();
+	__sq_defconst = module.Offset(0x1F550).As<sq_defconstType>();
 
-	g_pSquirrel<ScriptContext::SERVER>->__sq_compilebuffer = module.Offset(0x3110).As<sq_compilebufferType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_pushroottable = module.Offset(0x5840).As<sq_pushroottableType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_call = module.Offset(0x8620).As<sq_callType>();
+	__sq_compilebuffer = module.Offset(0x3110).As<sq_compilebufferType>();
+	__sq_pushroottable = module.Offset(0x5840).As<sq_pushroottableType>();
+	__sq_call = module.Offset(0x8620).As<sq_callType>();
 
-	g_pSquirrel<ScriptContext::SERVER>->__sq_newarray = module.Offset(0x39F0).As<sq_newarrayType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_arrayappend = module.Offset(0x3C70).As<sq_arrayappendType>();
+	__sq_newarray = module.Offset(0x39F0).As<sq_newarrayType>();
+	__sq_arrayappend = module.Offset(0x3C70).As<sq_arrayappendType>();
 
-	g_pSquirrel<ScriptContext::SERVER>->__sq_newtable = module.Offset(0x3960).As<sq_newtableType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_newslot = module.Offset(0x7080).As<sq_newslotType>();
+	__sq_newtable = module.Offset(0x3960).As<sq_newtableType>();
+	__sq_newslot = module.Offset(0x7080).As<sq_newslotType>();
 
-	g_pSquirrel<ScriptContext::SERVER>->__sq_pushstring = module.Offset(0x3440).As<sq_pushstringType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_pushinteger = module.Offset(0x36A0).As<sq_pushintegerType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_pushfloat = module.Offset(0x3800).As<sq_pushfloatType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_pushbool = module.Offset(0x3710).As<sq_pushboolType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_pushasset = module.Offset(0x3560).As<sq_pushassetType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_pushvector = module.Offset(0x3780).As<sq_pushvectorType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_raiseerror = module.Offset(0x8440).As<sq_raiseerrorType>();
+	__sq_pushstring = module.Offset(0x3440).As<sq_pushstringType>();
+	__sq_pushinteger = module.Offset(0x36A0).As<sq_pushintegerType>();
+	__sq_pushfloat = module.Offset(0x3800).As<sq_pushfloatType>();
+	__sq_pushbool = module.Offset(0x3710).As<sq_pushboolType>();
+	__sq_pushasset = module.Offset(0x3560).As<sq_pushassetType>();
+	__sq_pushvector = module.Offset(0x3780).As<sq_pushvectorType>();
+	__sq_raiseerror = module.Offset(0x8440).As<sq_raiseerrorType>();
 
-	g_pSquirrel<ScriptContext::SERVER>->__sq_getstring = module.Offset(0x60A0).As<sq_getstringType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_getinteger = module.Offset(0x60C0).As<sq_getintegerType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_getfloat = module.Offset(0x60E0).As<sq_getfloatType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_getbool = module.Offset(0x6110).As<sq_getboolType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_getasset = module.Offset(0x5FF0).As<sq_getassetType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_getuserdata = module.Offset(0x63B0).As<sq_getuserdataType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_getvector = module.Offset(0x6120).As<sq_getvectorType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_get = module.Offset(0x7C00).As<sq_getType>();
+	__sq_getstring = module.Offset(0x60A0).As<sq_getstringType>();
+	__sq_getinteger = module.Offset(0x60C0).As<sq_getintegerType>();
+	__sq_getfloat = module.Offset(0x60E0).As<sq_getfloatType>();
+	__sq_getbool = module.Offset(0x6110).As<sq_getboolType>();
+	__sq_getasset = module.Offset(0x5FF0).As<sq_getassetType>();
+	__sq_getuserdata = module.Offset(0x63B0).As<sq_getuserdataType>();
+	__sq_getvector = module.Offset(0x6120).As<sq_getvectorType>();
+	__sq_get = module.Offset(0x7C00).As<sq_getType>();
 
-	g_pSquirrel<ScriptContext::SERVER>->__sq_createuserdata = module.Offset(0x38D0).As<sq_createuserdataType>();
-	g_pSquirrel<ScriptContext::SERVER>->__sq_setuserdatatypeid = module.Offset(0x6470).As<sq_setuserdatatypeidType>();
-    g_pSquirrel<ScriptContext::SERVER>->__CSquirrelVM_Init = module.Offset(0x289C50).As<CSquirrelVM_InitType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_getconstantstable = module.Offset(0x5920).As<sq_getconstantstableType>();
-    g_pSquirrel<ScriptContext::SERVER>->__sq_removefromstack = module.Offset(0x7000).As<sq_removefromstackType>();
-    g_pSquirrel<ScriptContext::SERVER>->setjmpPtr = module.Offset(0x23AAF10).As<void**>();
+	__sq_createuserdata = module.Offset(0x38D0).As<sq_createuserdataType>();
+	__sq_setuserdatatypeid = module.Offset(0x6470).As<sq_setuserdatatypeidType>();
+    __CSquirrelVM_Init = module.Offset(0x289C50).As<CSquirrelVM_InitType>();
+    __sq_getconstantstable = module.Offset(0x5920).As<sq_getconstantstableType>();
+    __sq_removefromstack = module.Offset(0x7000).As<sq_removefromstackType>();
 
 
 
-    g_pSquirrel<ScriptContext::SERVER>->__CSquirrelVM_Destory = module.Offset(0x280DB0).As<CSquirrelVM_destroyType>();
+    __CSquirrelVM_Destory = module.Offset(0x280DB0).As<CSquirrelVM_destroyType>();
+
+    __CSquirrelVM_Create = module.Offset(0x260E0).As<CSquirrelVM_createType>();
+
+    RegisterSquirrelFunc = module.Offset(0x1DD10).As<RegisterSquirrelFuncType>();
  
-	MAKEHOOK(
-		module.Offset(0x1DD10),
-		&RegisterSquirrelFunctionHook<ScriptContext::SERVER>,
-		&g_pSquirrel<ScriptContext::SERVER>->RegisterSquirrelFunc);
-
-	MAKEHOOK(module.Offset(0x8AA0), &sq_compiler_createHook<ScriptContext::SERVER>, &sq_compiler_create<ScriptContext::SERVER>);
-
-	MAKEHOOK(module.Offset(0x1FE90), &SQPrintHook<ScriptContext::SERVER>, &SQPrint<ScriptContext::SERVER>);
-	MAKEHOOK(module.Offset(0x260E0), &CreateNewVMHook<ScriptContext::SERVER>, &CreateNewVM<ScriptContext::SERVER>);
-	MAKEHOOK(module.Offset(0x26E20), &DestroyVMHook<ScriptContext::SERVER>, &DestroyVM<ScriptContext::SERVER>);
-	MAKEHOOK(module.Offset(0x799E0), &ScriptCompileErrorHook<ScriptContext::SERVER>, &SQCompileError<ScriptContext::SERVER>);
-	MAKEHOOK(module.Offset(0x1D5C0), &CallScriptInitCallbackHook<ScriptContext::SERVER>, &CallScriptInitCallback<ScriptContext::SERVER>);
-
-    
-
-
 }
 
+CSquirrelVM* createVM(int context) {
+    CSquirrelVM* vm = __CSquirrelVM_Create(0,context,1.0);
+    std::ifstream jsonStream(GetFilePrefix() / "natives.json");
+    std::stringstream jsonStringStream;
+
+    if (jsonStream.fail())
+    {
+        spdlog::error("natives.json not found");
+        return vm;
+    }
+
+    while (jsonStream.peek() != EOF)
+        jsonStringStream << (char)jsonStream.get();
+
+    rapidjson::Document nativeJson;
+    nativeJson.Parse<rapidjson::ParseFlag::kParseCommentsFlag | rapidjson::ParseFlag::kParseTrailingCommasFlag>(jsonStringStream.str());
+
+    // fail if parse error
+    if (nativeJson.HasParseError())
+    {
+        spdlog::error("natives.json could not be read");
+        return vm;
+    }
+
+    const char* contextName = GetContextName((ScriptContext)context);
+
+    if (!(nativeJson.HasMember(contextName)&&nativeJson[contextName].IsObject())) 
+    {
+        spdlog::error("natives.json does not have a member for {} context or member is not an object",contextName);
+        return vm;
+    }
+    if (nativeJson[contextName].HasMember("nativeFunctions") && nativeJson[contextName]["nativeFunctions"].IsArray()) 
+    {
+        for (auto& func : nativeJson[contextName]["nativeFunctions"].GetArray()) 
+        {
+            /*
+            std::string name;
+            std::string helpText;
+            std::string returnType;
+            std::string argTypes;
+            if(func.HasMember("name")&&func["name"].IsString())
+            {
+                name =  func["name"].GetString();
+            }
+            else 
+            {
+                spdlog::warn("Function does not have a name");
+                continue;
+            }
+                
+            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+                helpText = func["helpText"].GetString();
+            else
+                helpText = "";
+
+            if(func.HasMember("returnType")&&func["returnType"].IsString())
+                returnType = func["returnType"].GetString();
+            else
+                returnType = "void";
 
 
+            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+                argTypes = func["argTypes"].GetString();
+            else
+                argTypes = "";
+
+
+            SQFuncRegistration* reg = new SQFuncRegistration;
+
+            reg->squirrelFuncName = new char[name.size() + 1];
+            strcpy((char*)reg->squirrelFuncName, name.c_str());
+            reg->cppFuncName = reg->squirrelFuncName;
+
+            reg->helpText = new char[helpText.size() + 1];
+            strcpy((char*)reg->helpText, helpText.c_str());
+
+            reg->returnTypeString = new char[returnType.size() + 1];
+            strcpy((char*)reg->returnTypeString, returnType.c_str());
+            reg->returnType = SQReturnTypeFromString(returnType.c_str());
+
+            reg->argTypes = new char[argTypes.size() + 1];
+            strcpy((char*)reg->argTypes, argTypes.c_str());
+
+            reg->funcPtr = SQStub;
+            
+            //TODO du not just leak the memory
+            */
+            SQFuncRegistration reg;
+
+            if(func.HasMember("name")&&func["name"].IsString())
+            {
+                reg.cppFuncName =  func["name"].GetString();
+                reg.squirrelFuncName = reg.cppFuncName;
+            }
+            else 
+            {
+                spdlog::warn("Function does not have a name");
+                continue;
+            }
+
+            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+                reg.helpText = func["helpText"].GetString();
+            else
+                reg.helpText = "";
+
+            if(func.HasMember("returnType")&&func["returnType"].IsString())
+                reg.returnTypeString = func["returnType"].GetString();
+            else
+                reg.returnTypeString = "void";
+
+            reg.returnType = SQReturnTypeFromString(reg.returnTypeString);
+
+            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+                reg.argTypes = func["argTypes"].GetString();
+            else
+                reg.argTypes = "";
+
+            reg.funcPtr = SQStub;
+
+            RegisterSquirrelFunc(vm,&reg,1);
+        }
+
+    }
+    if (nativeJson[contextName].HasMember("intConstants") && nativeJson[contextName]["intConstants"].IsArray()) 
+    {
+        for (auto& constant : nativeJson[contextName]["intConstants"].GetArray()) 
+        {
+
+
+            int val = 0;
+            const char* name;
+            if(constant.HasMember("name")&&constant["name"].IsString())
+                name = constant["name"].GetString();
+            else
+                continue;
+            if(constant.HasMember("val")&&constant["val"].IsInt())
+                val = constant["val"].GetInt();
+
+
+            defIntConst(vm,name,val);
+        }
+    }
+    if (nativeJson[contextName].HasMember("nativeClassFunctions") && nativeJson[contextName]["nativeClassFunctions"].IsArray())
+    {
+        for (auto& func : nativeJson[contextName]["nativeClassFunctions"].GetArray())
+        {
+            
+        }
+    }
+
+    return vm;
+}

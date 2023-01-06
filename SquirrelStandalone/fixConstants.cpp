@@ -9,6 +9,7 @@
 #include <Psapi.h>
 
 AUTOHOOK_INIT()
+/*
 AUTOHOOK(CSquirrelVM__InitConstants, server.dll + 0x2a4830, __int64, __fastcall, (CSquirrelVM* vm)) {
     HSquirrelVM* sqvm = vm->sqvm;
 
@@ -8497,3 +8498,4 @@ AUTOHOOK(CSquirrelVM__InitConstantsClient, client.dll + 0x31AE00, __int64, __fas
 
 
 }
+*/
