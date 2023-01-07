@@ -360,20 +360,19 @@ CSquirrelVM* createVM(int context) {
 
             if(func.HasMember("helpText")&&func["helpText"].IsString())      
                 reg.helpText = func["helpText"].GetString();
-            else
-                reg.helpText = "";
-
-            if(func.HasMember("returnType")&&func["returnType"].IsString())
-                reg.returnTypeString = func["returnType"].GetString();
-            else
-                reg.returnTypeString = "void";
-
-            reg.returnType = SQReturnTypeFromString(reg.returnTypeString);
+            
+            
+            if(func.HasMember("returnTypeString")&&func["returnTypeString"].IsString())
+                reg.returnTypeString = func["returnTypeString"].GetString();
+            
+            
+            if(func.HasMember("returnType")&&func["returnType"].IsInt())
+                *(int*)& reg.returnType = func["returnType"].GetInt();
+            
 
             if(func.HasMember("argTypes")&&func["argTypes"].IsString())
                 reg.argTypes = func["argTypes"].GetString();
-            else
-                reg.argTypes = "";
+            
 
             reg.funcPtr = SQStub;
 
