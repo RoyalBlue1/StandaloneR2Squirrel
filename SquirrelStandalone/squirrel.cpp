@@ -345,8 +345,9 @@ CSquirrelVM* createVM(int context) {
             
             //TODO du not just leak the memory
             */
-            SQFuncRegistration reg;
-
+            SQFuncRegistration reg = SQFuncRegistration{};
+            reg.argTypes = 0;
+            int a3arg = 0;
             if(func.HasMember("name")&&func["name"].IsString())
             {
                 reg.cppFuncName =  func["name"].GetString();
@@ -356,6 +357,10 @@ CSquirrelVM* createVM(int context) {
             {
                 spdlog::warn("Function does not have a name");
                 continue;
+            }
+
+            if (func.HasMember("a3arg") && func["a3arg"].IsInt()) {
+                a3arg = func["a3arg"].GetInt();
             }
 
             if(func.HasMember("helpText")&&func["helpText"].IsString())      
@@ -375,11 +380,13 @@ CSquirrelVM* createVM(int context) {
             
 
             reg.funcPtr = SQStub;
-            if (!strcmp("DispatchSpawn", reg.cppFuncName)) {
+            if (!strcmp("DoEntFire", reg.cppFuncName)) {
                 spdlog::info("foundFunc");
             }
+
+
             spdlog::info("func {}",reg.cppFuncName);
-            RegisterSquirrelFunc(vm,&reg,0);
+            RegisterSquirrelFunc(vm,&reg,a3arg);
         }
 
     }
