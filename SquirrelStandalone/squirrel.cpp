@@ -367,7 +367,7 @@ CSquirrelVM* createVM(int context) {
             
             
             if(func.HasMember("returnType")&&func["returnType"].IsInt())
-                *(int*)& reg.returnType = func["returnType"].GetInt();
+                reg.returnType =(eSQReturnType) func["returnType"].GetInt();
             
 
             if(func.HasMember("argTypes")&&func["argTypes"].IsString())
@@ -375,8 +375,11 @@ CSquirrelVM* createVM(int context) {
             
 
             reg.funcPtr = SQStub;
-
-            RegisterSquirrelFunc(vm,&reg,1);
+            if (!strcmp("DispatchSpawn", reg.cppFuncName)) {
+                spdlog::info("foundFunc");
+            }
+            spdlog::info("func {}",reg.cppFuncName);
+            RegisterSquirrelFunc(vm,&reg,0);
         }
 
     }

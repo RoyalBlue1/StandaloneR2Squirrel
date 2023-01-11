@@ -103,10 +103,10 @@ int main(int argc,char**argv)
 
 
 
-    //CSquirrelVM* vm = createVM(0);
-    //ExecuteCode(vm,"test()");
+    CSquirrelVM* vm = createVM(0);
+    ExecuteCode(vm,"test()");
     
-    startVM();
+
 
 
 
