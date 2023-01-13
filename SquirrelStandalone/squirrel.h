@@ -102,7 +102,8 @@ eSQReturnType SQReturnTypeFromString(const char* pReturnType);
 const char* SQTypeNameFromID(const int iTypeId);
 
 // core sqvm funcs
-typedef int64_t(*RegisterSquirrelFuncType)(CSquirrelVM* sqvm, SQFuncRegistration* funcReg, char unknown);
+typedef int64_t(*RegisterSquirrelFuncType)(CSquirrelVM* sqvm, SQFuncRegistration* funcReg,const char** className, char unknown, char unknown2);
+
 typedef void (*sq_defconstType)(CSquirrelVM* sqvm, const SQChar* name, int value);
 
 typedef SQRESULT(*sq_compilebufferType)(
@@ -163,6 +164,7 @@ typedef long long (*sq_rdbg_updateType)(SQDbgServer* dbgServer);
 
 typedef SQInstruction* (*sq_instructionvectorreallocType)(SQInstruction** pVector, SQInteger iNewSize);
 
+typedef __int64 (*sq_registerentityclassType)(HSquirrelVM* sqvm, const char* className);
 
 
 #pragma region SQVM funcs
@@ -205,6 +207,9 @@ typedef SQInstruction* (*sq_instructionvectorreallocType)(SQInstruction** pVecto
 
     extern CSquirrelVM_destroyType __CSquirrelVM_Destory;
     extern CSquirrelVM_createType __CSquirrelVM_Create;
+
+    extern sq_registerentityclassType __sq_registerentityclass;
+
     //void** setjmpPtr;
 
 

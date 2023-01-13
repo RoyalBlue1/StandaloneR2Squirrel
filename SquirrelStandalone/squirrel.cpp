@@ -144,6 +144,8 @@ sq_removefromstackType __sq_removefromstack;
 CSquirrelVM_destroyType __CSquirrelVM_Destory;
 CSquirrelVM_createType __CSquirrelVM_Create;
 
+sq_registerentityclassType __sq_registerentityclass;
+
 void ExecuteCode(CSquirrelVM* pSQVM,const char* pCode)
 {
 	if (!pSQVM || !pSQVM->sqvm)
@@ -254,7 +256,9 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 
     __CSquirrelVM_Create = module.Offset(0x260E0).As<CSquirrelVM_createType>();
 
-    RegisterSquirrelFunc = module.Offset(0x1DD10).As<RegisterSquirrelFuncType>();
+    RegisterSquirrelFunc = module.Offset(0x20BC0).As<RegisterSquirrelFuncType>();
+
+    __sq_registerentityclass = module.Offset(0xA390).As<sq_registerentityclassType>();
  
 }
 
@@ -386,7 +390,7 @@ CSquirrelVM* createVM(int context) {
 
 
             spdlog::info("func {}",reg.cppFuncName);
-            RegisterSquirrelFunc(vm,&reg,a3arg);
+            RegisterSquirrelFunc(vm,&reg,0,a3arg,0);
         }
 
     }
@@ -411,10 +415,74 @@ CSquirrelVM* createVM(int context) {
     }
     if (nativeJson[contextName].HasMember("nativeClassFunctions") && nativeJson[contextName]["nativeClassFunctions"].IsArray())
     {
-        for (auto& func : nativeJson[contextName]["nativeClassFunctions"].GetArray())
-        {
-            
+        auto nativeClasses = nativeJson[contextName]["nativeClassFunctions"].GetArray();
+        std::vector<std::string> addedClasses;
+        while (addedClasses.size() < nativeClasses.Size()) {
+            int classesBefore = addedClasses.size();
+            for (auto& cl : nativeClasses ) {
+                if(std::find(addedClasses.begin(),addedClasses.end(),cl["className"].GetString())!=addedClasses.end())
+                    continue;
+
+                if (!cl.HasMember("parent") || std::find(addedClasses.begin(),addedClasses.end(),cl["parent"].GetString())!=addedClasses.end()) {
+                    
+                    const char* className = cl["className"].GetString();
+                    addedClasses.push_back(className);
+                    //add class code
+                    __sq_registerentityclass(vm->sqvm,className);
+                    if (cl.HasMember("functions") && cl["functions"].IsArray()) {
+                        for (auto& func : cl["functions"].GetArray()) {
+                            SQFuncRegistration reg = SQFuncRegistration{};
+                            reg.argTypes = 0;
+                            int a3arg = 0;
+                            if(func.HasMember("name")&&func["name"].IsString())
+                            {
+                                reg.cppFuncName =  func["name"].GetString();
+                                reg.squirrelFuncName = reg.cppFuncName;
+                            }
+                            else 
+                            {
+                                spdlog::warn("Function does not have a name");
+                                continue;
+                            }
+
+                            if (func.HasMember("a3arg") && func["a3arg"].IsInt()) {
+                                a3arg = func["a3arg"].GetInt();
+                            }
+
+                            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+                                reg.helpText = func["helpText"].GetString();
+
+
+                            if(func.HasMember("returnTypeString")&&func["returnTypeString"].IsString())
+                                reg.returnTypeString = func["returnTypeString"].GetString();
+
+
+                            if(func.HasMember("returnType")&&func["returnType"].IsInt())
+                                reg.returnType =(eSQReturnType) func["returnType"].GetInt();
+
+
+                            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+                                reg.argTypes = func["argTypes"].GetString();
+
+
+                            reg.funcPtr = SQStub;
+                            if (!strcmp("DoEntFire", reg.cppFuncName)) {
+                                spdlog::info("foundFunc");
+                            }
+
+
+                            spdlog::info("func {}",reg.cppFuncName);
+                            RegisterSquirrelFunc(vm,&reg,&className,a3arg,1);
+                        }
+                    }
+                }
+            }
+
+            if (classesBefore == addedClasses.size())
+                break;
         }
+
+
     }
 
     return vm;
