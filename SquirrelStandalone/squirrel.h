@@ -167,6 +167,10 @@ typedef SQInstruction* (*sq_instructionvectorreallocType)(SQInstruction** pVecto
 typedef __int64 (*sq_registerentityclassType)(HSquirrelVM* sqvm, const char* className);
 
 
+typedef int64_t (*sub_1F7E90Type)(const char* fileName);
+typedef void (*sub_1F7B40Type)(const char* fileName,int64_t a2,char** pScriptsToLoad,int* nScriptsToLoad,char** pLoadedScripts,int nLoadedScripts);
+typedef char (*sub_2A38E0Type)(CSquirrelVM* a1,int context,char** pScriptsToLoad, int nScriptsToLoad);
+
 #pragma region SQVM funcs
 	extern RegisterSquirrelFuncType RegisterSquirrelFunc;
     extern sq_defconstType __sq_defconst;
@@ -209,6 +213,10 @@ typedef __int64 (*sq_registerentityclassType)(HSquirrelVM* sqvm, const char* cla
     extern CSquirrelVM_createType __CSquirrelVM_Create;
 
     extern sq_registerentityclassType __sq_registerentityclass;
+
+    extern sub_1F7E90Type loadRson;
+    extern sub_1F7B40Type parseScriptRson;
+    extern sub_2A38E0Type CSquirrelVM_LoadMultipleScriptFiles;
 
     //void** setjmpPtr;
 

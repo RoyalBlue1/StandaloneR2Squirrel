@@ -146,6 +146,10 @@ CSquirrelVM_createType __CSquirrelVM_Create;
 
 sq_registerentityclassType __sq_registerentityclass;
 
+sub_1F7E90Type loadRson;
+sub_1F7B40Type parseScriptRson;
+sub_2A38E0Type CSquirrelVM_LoadMultipleScriptFiles;
+
 void ExecuteCode(CSquirrelVM* pSQVM,const char* pCode)
 {
 	if (!pSQVM || !pSQVM->sqvm)
@@ -204,7 +208,7 @@ AUTOHOOK(SQPrintFunc_UI,server.dll + 0x1FFD0,SQInteger,__fastcall,(HSquirrelVM* 
 AUTOHOOK(ScriptCompileError,server.dll+0x799E0,void,__fastcall,(HSquirrelVM* sqvm, const char* error, const char* file, int line, int column))
 {
     spdlog::error("Compile Error \"{}\" in {} VM in file {} on line {} in column {}\n", error,GetContextName((ScriptContext)sqvm->sharedState->cSquirrelVM->vmContext), file, line, column);
-    exit(-1);
+    //exit(-1);
 }
 
 
@@ -260,6 +264,10 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 
     __sq_registerentityclass = module.Offset(0xA390).As<sq_registerentityclassType>();
  
+
+    loadRson = module.Offset(0x1F7E90).As<sub_1F7E90Type>();
+    parseScriptRson = module.Offset(0x1F7B40).As<sub_1F7B40Type>();
+    CSquirrelVM_LoadMultipleScriptFiles = module.Offset(0x2A38E0).As<sub_2A38E0Type>();
 }
 
 CSquirrelVM* createVM(int context) {
@@ -384,12 +392,10 @@ CSquirrelVM* createVM(int context) {
             
 
             reg.funcPtr = SQStub;
-            if (!strcmp("DoEntFire", reg.cppFuncName)) {
-                spdlog::info("foundFunc");
-            }
 
 
-            spdlog::info("func {}",reg.cppFuncName);
+
+            //spdlog::info("func {}",reg.cppFuncName);
             RegisterSquirrelFunc(vm,&reg,0,a3arg,0);
         }
 
@@ -466,12 +472,10 @@ CSquirrelVM* createVM(int context) {
 
 
                             reg.funcPtr = SQStub;
-                            if (!strcmp("DoEntFire", reg.cppFuncName)) {
-                                spdlog::info("foundFunc");
-                            }
 
 
-                            spdlog::info("func {}",reg.cppFuncName);
+
+                            //spdlog::info("func {}",reg.cppFuncName);
                             RegisterSquirrelFunc(vm,&reg,&className,a3arg,1);
                         }
                     }
@@ -481,7 +485,6 @@ CSquirrelVM* createVM(int context) {
             if (classesBefore == addedClasses.size())
                 break;
         }
-
 
     }
 

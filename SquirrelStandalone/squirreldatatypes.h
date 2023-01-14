@@ -403,7 +403,7 @@ struct alignas(8) SQSharedState
     SQObject _nativeClosures;
     SQObject _typedConstants;
     SQObject _untypedConstants;
-    SQObject _globals;
+    SQObject entityClasses;
     SQObject _functions;
     SQObject _structs;
     SQObject _typeDefs;

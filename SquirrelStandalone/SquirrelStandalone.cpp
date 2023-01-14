@@ -104,11 +104,21 @@ int main(int argc,char**argv)
 
 
     CSquirrelVM* vm = createVM(0);
-    ExecuteCode(vm,"test()");
-    
+    SQTable* test = vm->sqvm->sharedState->_typedConstants._VAL.asTable;
+    for (int i = 0; i < test->_numOfNodes; i++) {
+        if (test->_nodes[i].key._Type == OT_STRING && test->_nodes[i].val._Type == OT_BOOL) {
+            spdlog::info("key {} val {}",test->_nodes[i].key._VAL.asString->_val,test->_nodes[i].val._VAL.asBoolean);
+        }
+    }
+
+    char* pScriptsToLoad[1024];
+    int nScriptsToLoad = 0;
+    int64_t rson = loadRson("scripts/vscripts/scripts.rson");
+    parseScriptRson("scripts/vscripts/scripts.rson", rson, pScriptsToLoad , &nScriptsToLoad, 0i64, 0);
+    CSquirrelVM_LoadMultipleScriptFiles(vm, vm->vmContext, pScriptsToLoad, nScriptsToLoad);
 
 
-
+    spdlog::info("success");
 
 
 

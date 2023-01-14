@@ -25,7 +25,7 @@ extern "C" void stub() {
 #pragma comment(linker, "/EXPORT:" "SendRemoteErrorReport" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "LoggingSystem_Log" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "StackToolsNotify_LoadedLibrary" "=" __FUNCTION__)
-#pragma comment(linker, "/EXPORT:" "Error" "=" __FUNCTION__)
+
 #pragma comment(linker, "/EXPORT:" "GetCPUInformation" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "MemFreeScratch" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "MemAllocScratch" "=" __FUNCTION__)
@@ -114,15 +114,22 @@ extern "C" void stub() {
 #pragma comment(linker, "/EXPORT:" "?JT_HelpWithJobTypes@@YA_NP6A_N_K@Z00@Z" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "?JTGuts_AddJob_Try@@YA?AW4JobID_t@@W4JobTypeID_t@@W41@_K2@Z" "=" __FUNCTION__)
 #pragma comment(linker, "/EXPORT:" "?JT_SetThreadIdx@@YAXI@Z" "=" __FUNCTION__)
-#pragma comment(linker, "/EXPORT:" "" "=" __FUNCTION__)
-#pragma comment(linker, "/EXPORT:" "" "=" __FUNCTION__)
 }
 
 //#pragma comment(linker, "/EXPORT:" "" "=" __FUNCTION__)
 
 
 
+extern "C" void error2(const char* format, ...) {
+#pragma comment(linker, "/EXPORT:" "Error" "=" __FUNCTION__)
+    //char message[9000];
+    va_list args;
+    va_start(args,format);
+    vprintf(format,args);
+    
+    va_end(args);
 
+}
 
 
 
