@@ -145,10 +145,15 @@ CSquirrelVM_destroyType __CSquirrelVM_Destory;
 CSquirrelVM_createType __CSquirrelVM_Create;
 
 sq_registerentityclassType __sq_registerentityclass;
+sq_registerclassshortType __sq_registerclassshort;
 
 sub_1F7E90Type loadRson;
 sub_1F7B40Type parseScriptRson;
 sub_2A38E0Type CSquirrelVM_LoadMultipleScriptFiles;
+
+executeFunctionType executeFunction;
+
+sub_453D0Type sub_453D0;
 
 void ExecuteCode(CSquirrelVM* pSQVM,const char* pCode)
 {
@@ -211,6 +216,14 @@ AUTOHOOK(ScriptCompileError,server.dll+0x799E0,void,__fastcall,(HSquirrelVM* sqv
     //exit(-1);
 }
 
+AUTOHOOK(ScriptCompile, server.dll + 0x4AAB0, __int64, __fastcall, (SQCompiler* comp, HSquirrelVM* sqvm,const char** code,const char* context)) {
+    
+    if(!strcmp("typecompiler",context))
+        spdlog::info("{}",*code);
+
+    return ScriptCompile(comp,sqvm,code,context);
+}
+
 
 ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 {
@@ -263,15 +276,21 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
     RegisterSquirrelFunc = module.Offset(0x20BC0).As<RegisterSquirrelFuncType>();
 
     __sq_registerentityclass = module.Offset(0xA390).As<sq_registerentityclassType>();
+    __sq_registerclassshort = module.Offset(0x4DC0).As<sq_registerclassshortType>();
  
 
     loadRson = module.Offset(0x1F7E90).As<sub_1F7E90Type>();
     parseScriptRson = module.Offset(0x1F7B40).As<sub_1F7B40Type>();
     CSquirrelVM_LoadMultipleScriptFiles = module.Offset(0x2A38E0).As<sub_2A38E0Type>();
+
+    executeFunction = module.Offset(0x1D6F0).As<executeFunctionType>();
+
+     sub_453D0 = module.Offset(0x453D0).As<sub_453D0Type>();
 }
 
 CSquirrelVM* createVM(int context) {
     CSquirrelVM* vm = __CSquirrelVM_Create(0,context,1.0);
+    sub_453D0(vm,vm->sqvm);
     std::ifstream jsonStream(GetFilePrefix() / "natives.json");
     std::stringstream jsonStringStream;
 
@@ -301,124 +320,7 @@ CSquirrelVM* createVM(int context) {
         spdlog::error("natives.json does not have a member for {} context or member is not an object",contextName);
         return vm;
     }
-    if (nativeJson[contextName].HasMember("nativeFunctions") && nativeJson[contextName]["nativeFunctions"].IsArray()) 
-    {
-        for (auto& func : nativeJson[contextName]["nativeFunctions"].GetArray()) 
-        {
-            /*
-            std::string name;
-            std::string helpText;
-            std::string returnType;
-            std::string argTypes;
-            if(func.HasMember("name")&&func["name"].IsString())
-            {
-                name =  func["name"].GetString();
-            }
-            else 
-            {
-                spdlog::warn("Function does not have a name");
-                continue;
-            }
-                
-            if(func.HasMember("helpText")&&func["helpText"].IsString())      
-                helpText = func["helpText"].GetString();
-            else
-                helpText = "";
-
-            if(func.HasMember("returnType")&&func["returnType"].IsString())
-                returnType = func["returnType"].GetString();
-            else
-                returnType = "void";
-
-
-            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
-                argTypes = func["argTypes"].GetString();
-            else
-                argTypes = "";
-
-
-            SQFuncRegistration* reg = new SQFuncRegistration;
-
-            reg->squirrelFuncName = new char[name.size() + 1];
-            strcpy((char*)reg->squirrelFuncName, name.c_str());
-            reg->cppFuncName = reg->squirrelFuncName;
-
-            reg->helpText = new char[helpText.size() + 1];
-            strcpy((char*)reg->helpText, helpText.c_str());
-
-            reg->returnTypeString = new char[returnType.size() + 1];
-            strcpy((char*)reg->returnTypeString, returnType.c_str());
-            reg->returnType = SQReturnTypeFromString(returnType.c_str());
-
-            reg->argTypes = new char[argTypes.size() + 1];
-            strcpy((char*)reg->argTypes, argTypes.c_str());
-
-            reg->funcPtr = SQStub;
-            
-            //TODO du not just leak the memory
-            */
-            SQFuncRegistration reg = SQFuncRegistration{};
-            reg.argTypes = 0;
-            int a3arg = 0;
-            if(func.HasMember("name")&&func["name"].IsString())
-            {
-                reg.cppFuncName =  func["name"].GetString();
-                reg.squirrelFuncName = reg.cppFuncName;
-            }
-            else 
-            {
-                spdlog::warn("Function does not have a name");
-                continue;
-            }
-
-            if (func.HasMember("a3arg") && func["a3arg"].IsInt()) {
-                a3arg = func["a3arg"].GetInt();
-            }
-
-            if(func.HasMember("helpText")&&func["helpText"].IsString())      
-                reg.helpText = func["helpText"].GetString();
-            
-            
-            if(func.HasMember("returnTypeString")&&func["returnTypeString"].IsString())
-                reg.returnTypeString = func["returnTypeString"].GetString();
-            
-            
-            if(func.HasMember("returnType")&&func["returnType"].IsInt())
-                reg.returnType =(eSQReturnType) func["returnType"].GetInt();
-            
-
-            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
-                reg.argTypes = func["argTypes"].GetString();
-            
-
-            reg.funcPtr = SQStub;
-
-
-
-            //spdlog::info("func {}",reg.cppFuncName);
-            RegisterSquirrelFunc(vm,&reg,0,a3arg,0);
-        }
-
-    }
-    if (nativeJson[contextName].HasMember("intConstants") && nativeJson[contextName]["intConstants"].IsArray()) 
-    {
-        for (auto& constant : nativeJson[contextName]["intConstants"].GetArray()) 
-        {
-
-
-            int val = 0;
-            const char* name;
-            if(constant.HasMember("name")&&constant["name"].IsString())
-                name = constant["name"].GetString();
-            else
-                continue;
-            if(constant.HasMember("val")&&constant["val"].IsInt())
-                val = constant["val"].GetInt();
-
-
-            defIntConst(vm,name,val);
-        }
-    }
+    
     if (nativeJson[contextName].HasMember("nativeClassFunctions") && nativeJson[contextName]["nativeClassFunctions"].IsArray())
     {
         auto nativeClasses = nativeJson[contextName]["nativeClassFunctions"].GetArray();
@@ -435,6 +337,9 @@ CSquirrelVM* createVM(int context) {
                     addedClasses.push_back(className);
                     //add class code
                     __sq_registerentityclass(vm->sqvm,className);
+                    if(cl.HasMember("structName")&& cl.HasMember("shortName"))
+                        __sq_registerclassshort(vm->sqvm,cl["structName"].GetString(),cl["shortName"].GetString(),&className,0);
+
                     if (cl.HasMember("functions") && cl["functions"].IsArray()) {
                         for (auto& func : cl["functions"].GetArray()) {
                             SQFuncRegistration reg = SQFuncRegistration{};
@@ -470,12 +375,24 @@ CSquirrelVM* createVM(int context) {
                             if(func.HasMember("argTypes")&&func["argTypes"].IsString())
                                 reg.argTypes = func["argTypes"].GetString();
 
+                            if(func.HasMember("allowAnyArguments")&&func["allowAnyArguments"].IsInt())
+                                reg.allowAnyArguments = func["allowAnyArguments"].GetInt();
+
+                            if (reg.argTypes == 0) {
+                                reg.allowAnyArguments = 1;
+                            }
+
+                            if(func.HasMember("externalBufferSize") && func["externalBufferSize"].IsInt()) {
+                                reg.externalBufferSize = func["externalBufferSize"].GetInt();
+                            }
+
+                            
 
                             reg.funcPtr = SQStub;
 
-
-
-                            //spdlog::info("func {}",reg.cppFuncName);
+                            if(!strcmp("GetHealthFrac",reg.squirrelFuncName))
+                                spdlog::info("");
+                            //spdlog::info("func {} arg type {}",reg.cppFuncName,reg.argTypes);
                             RegisterSquirrelFunc(vm,&reg,&className,a3arg,1);
                         }
                     }
@@ -487,6 +404,136 @@ CSquirrelVM* createVM(int context) {
         }
 
     }
+    if (nativeJson[contextName].HasMember("nativeFunctions") && nativeJson[contextName]["nativeFunctions"].IsArray()) 
+    {
+        for (auto& func : nativeJson[contextName]["nativeFunctions"].GetArray()) 
+        {
+            /*
+            std::string name;
+            std::string helpText;
+            std::string returnType;
+            std::string argTypes;
+            if(func.HasMember("name")&&func["name"].IsString())
+            {
+            name =  func["name"].GetString();
+            }
+            else 
+            {
+            spdlog::warn("Function does not have a name");
+            continue;
+            }
 
+            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+            helpText = func["helpText"].GetString();
+            else
+            helpText = "";
+
+            if(func.HasMember("returnType")&&func["returnType"].IsString())
+            returnType = func["returnType"].GetString();
+            else
+            returnType = "void";
+
+
+            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+            argTypes = func["argTypes"].GetString();
+            else
+            argTypes = "";
+
+
+            SQFuncRegistration* reg = new SQFuncRegistration;
+
+            reg->squirrelFuncName = new char[name.size() + 1];
+            strcpy((char*)reg->squirrelFuncName, name.c_str());
+            reg->cppFuncName = reg->squirrelFuncName;
+
+            reg->helpText = new char[helpText.size() + 1];
+            strcpy((char*)reg->helpText, helpText.c_str());
+
+            reg->returnTypeString = new char[returnType.size() + 1];
+            strcpy((char*)reg->returnTypeString, returnType.c_str());
+            reg->returnType = SQReturnTypeFromString(returnType.c_str());
+
+            reg->argTypes = new char[argTypes.size() + 1];
+            strcpy((char*)reg->argTypes, argTypes.c_str());
+
+            reg->funcPtr = SQStub;
+
+            //TODO du not just leak the memory
+            */
+            SQFuncRegistration reg = SQFuncRegistration{};
+            reg.argTypes = 0;
+            int a3arg = 0;
+            if(func.HasMember("name")&&func["name"].IsString())
+            {
+                reg.cppFuncName =  func["name"].GetString();
+                reg.squirrelFuncName = reg.cppFuncName;
+            }
+            else 
+            {
+                spdlog::warn("Function does not have a name");
+                continue;
+            }
+
+            if (func.HasMember("a3arg") && func["a3arg"].IsInt()) {
+                a3arg = func["a3arg"].GetInt();
+            }
+
+            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+                reg.helpText = func["helpText"].GetString();
+
+
+            if(func.HasMember("returnTypeString")&&func["returnTypeString"].IsString())
+                reg.returnTypeString = func["returnTypeString"].GetString();
+
+
+            if(func.HasMember("returnType")&&func["returnType"].IsInt())
+                reg.returnType =(eSQReturnType) func["returnType"].GetInt();
+
+
+            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+                reg.argTypes = func["argTypes"].GetString();
+
+            if (reg.argTypes == 0) {
+                reg.allowAnyArguments = 1;
+            }
+
+            if(func.HasMember("externalBufferSize") && func["externalBufferSize"].IsInt()) {
+                reg.externalBufferSize = func["externalBufferSize"].GetInt();
+            }
+
+            reg.unknown1 = 1;
+
+            reg.funcPtr = SQStub;
+
+            if(!strcmp("GetHealthFrac",reg.squirrelFuncName))
+                spdlog::info("found func");
+            //spdlog::info("func {} arg type {}",reg.cppFuncName,reg.argTypes);
+
+            //spdlog::info("func {}",reg.cppFuncName);
+            RegisterSquirrelFunc(vm,&reg,0,a3arg,0);
+        }
+
+    }
+
+    if (nativeJson[contextName].HasMember("intConstants") && nativeJson[contextName]["intConstants"].IsArray()) 
+    {
+        for (auto& constant : nativeJson[contextName]["intConstants"].GetArray()) 
+        {
+
+
+            int val = 0;
+            const char* name;
+            if(constant.HasMember("name")&&constant["name"].IsString())
+                name = constant["name"].GetString();
+            else
+                continue;
+            if(constant.HasMember("val")&&constant["val"].IsInt())
+                val = constant["val"].GetInt();
+
+
+            defIntConst(vm,name,val);
+        }
+    }
+    
     return vm;
 }

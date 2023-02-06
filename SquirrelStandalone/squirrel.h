@@ -79,7 +79,7 @@ struct SQFuncRegistration
 	eSQReturnType returnType;
 	uint32_t* externalBufferPointer;
 	uint64_t externalBufferSize;
-	uint64_t unknown3;
+	uint64_t allowAnyArguments;
 	uint64_t unknown4;
 	SQFunction funcPtr;
 
@@ -170,6 +170,11 @@ typedef __int64 (*sq_registerentityclassType)(HSquirrelVM* sqvm, const char* cla
 typedef int64_t (*sub_1F7E90Type)(const char* fileName);
 typedef void (*sub_1F7B40Type)(const char* fileName,int64_t a2,char** pScriptsToLoad,int* nScriptsToLoad,char** pLoadedScripts,int nLoadedScripts);
 typedef char (*sub_2A38E0Type)(CSquirrelVM* a1,int context,char** pScriptsToLoad, int nScriptsToLoad);
+typedef __int64 (*sq_registerclassshortType)(HSquirrelVM* sqvm,const char* name,const char* shortName,const char** classInit, const char** parentClassInit);
+
+typedef char (*executeFunctionType)(CSquirrelVM* vm,const char* funcname);
+
+typedef __int64 (*sub_453D0Type)(CSquirrelVM* vm,HSquirrelVM* sqvm);
 
 #pragma region SQVM funcs
 	extern RegisterSquirrelFuncType RegisterSquirrelFunc;
@@ -213,11 +218,15 @@ typedef char (*sub_2A38E0Type)(CSquirrelVM* a1,int context,char** pScriptsToLoad
     extern CSquirrelVM_createType __CSquirrelVM_Create;
 
     extern sq_registerentityclassType __sq_registerentityclass;
+    extern sq_registerclassshortType __sq_registerclassshort;
 
     extern sub_1F7E90Type loadRson;
     extern sub_1F7B40Type parseScriptRson;
     extern sub_2A38E0Type CSquirrelVM_LoadMultipleScriptFiles;
 
+    extern executeFunctionType executeFunction;
+
+    extern sub_453D0Type sub_453D0;
     //void** setjmpPtr;
 
 

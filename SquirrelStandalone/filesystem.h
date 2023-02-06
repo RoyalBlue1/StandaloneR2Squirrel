@@ -99,7 +99,7 @@ public:
         /*void(*RemoveSearchPath) (IFileSystem* fileSystem, const char* pPath, const char* pathID, SearchPathAdd_t addType); // was +88 (11)
         void* unknown2[4];
         void(*GetSearchPath) (IFileSystem* fileSystem, const char* pathID, bool bGetPackFiles, char* pPath, int nMaxLen); // was +128 (16)
-        void* unknown3[78];*/
+        void* allowAnyArguments[78];*/
         //void* unknown2[83];
 
 

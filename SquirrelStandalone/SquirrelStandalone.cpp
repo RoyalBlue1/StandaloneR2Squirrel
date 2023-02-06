@@ -104,12 +104,9 @@ int main(int argc,char**argv)
 
 
     CSquirrelVM* vm = createVM(0);
-    SQTable* test = vm->sqvm->sharedState->_typedConstants._VAL.asTable;
-    for (int i = 0; i < test->_numOfNodes; i++) {
-        if (test->_nodes[i].key._Type == OT_STRING && test->_nodes[i].val._Type == OT_BOOL) {
-            spdlog::info("key {} val {}",test->_nodes[i].key._VAL.asString->_val,test->_nodes[i].val._VAL.asBoolean);
-        }
-    }
+
+
+    executeFunction(vm,"CodeCallback_Precompile");
 
     char* pScriptsToLoad[1024];
     int nScriptsToLoad = 0;
