@@ -80,6 +80,10 @@ bool LoadLibraries()
 
 }
 
+SQRESULT SQStub(HSquirrelVM* vm) {
+    return SQRESULT_NULL;
+}
+
 
 int main(int argc,char**argv)
 {
@@ -96,6 +100,145 @@ int main(int argc,char**argv)
         SetFilePrefixToCurrentDirectory(fs::path("mods"));
     g_pModManager = new ModManager();
     g_filesystem = new SquirrelFilesystem();
+    
+    fs::path jsonPath = "natives.json";
+
+    if (argc >= 3) {
+        jsonPath = fs::path(argv[2]);
+    }
+
+    std::ifstream jsonStream(GetFilePrefix() / jsonPath);
+    std::stringstream jsonStringStream;
+
+    if (jsonStream.fail())
+    {
+        spdlog::error("natives.json not found");
+        return 1;
+    }
+
+    while (jsonStream.peek() != EOF)
+        jsonStringStream << (char)jsonStream.get();
+
+    rapidjson::Document nativeJson;
+    nativeJson.Parse<rapidjson::ParseFlag::kParseCommentsFlag | rapidjson::ParseFlag::kParseTrailingCommasFlag>(jsonStringStream.str());
+
+    // fail if parse error
+    if (nativeJson.HasParseError())
+    {
+        spdlog::error("natives.json could not be read");
+        return 1;
+    }
+
+
+    if (nativeJson.HasMember("SERVER") && nativeJson["SERVER"].IsArray())
+    {
+        for (auto& func : nativeJson["SERVER"].GetArray()) 
+        {
+
+            std::string name;
+            std::string helpText = "";
+            std::string returnTypeString = "";
+            std::string argTypes = "";
+
+            if(func.HasMember("name")&&func["name"].IsString())
+            {
+                name = func["name"].GetString();
+            }
+            else 
+            {
+                spdlog::warn("Function does not have a name");
+                continue;
+            }
+
+
+            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+                helpText = func["helpText"].GetString();
+
+
+            if(func.HasMember("returnTypeString")&&func["returnTypeString"].IsString())
+                returnTypeString = func["returnTypeString"].GetString();
+
+            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+                argTypes = func["argTypes"].GetString();
+
+            g_pSquirrel<ScriptContext::SERVER>->AddFuncRegistration(returnTypeString,name,argTypes,helpText,SQStub);
+        }
+
+    }
+    
+    if (nativeJson.HasMember("CLIENT") && nativeJson["CLIENT"].IsArray()) 
+    {
+        for (auto& func : nativeJson["CLIENT"].GetArray()) 
+        {
+
+            std::string name;
+            std::string helpText = "";
+            std::string returnTypeString = "";
+            std::string argTypes = "";
+
+            if(func.HasMember("name")&&func["name"].IsString())
+            {
+                name = func["name"].GetString();
+            }
+            else 
+            {
+                spdlog::warn("Function does not have a name");
+                continue;
+            }
+
+
+            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+                helpText = func["helpText"].GetString();
+
+
+            if(func.HasMember("returnTypeString")&&func["returnTypeString"].IsString())
+                returnTypeString = func["returnTypeString"].GetString();
+
+            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+                argTypes = func["argTypes"].GetString();
+
+            g_pSquirrel<ScriptContext::CLIENT>->AddFuncRegistration(returnTypeString,name,argTypes,helpText,SQStub);
+        }
+
+    }
+
+
+    if (nativeJson.HasMember("UI") && nativeJson["UI"].IsArray()) 
+    {
+        for (auto& func : nativeJson["UI"].GetArray()) 
+        {
+
+            std::string name;
+            std::string helpText = "";
+            std::string returnTypeString = "";
+            std::string argTypes = "";
+
+            if(func.HasMember("name")&&func["name"].IsString())
+            {
+                name = func["name"].GetString();
+            }
+            else 
+            {
+                spdlog::warn("Function does not have a name");
+                continue;
+            }
+
+
+            if(func.HasMember("helpText")&&func["helpText"].IsString())      
+                helpText = func["helpText"].GetString();
+
+
+            if(func.HasMember("returnTypeString")&&func["returnTypeString"].IsString())
+                returnTypeString = func["returnTypeString"].GetString();
+
+            if(func.HasMember("argTypes")&&func["argTypes"].IsString())
+                argTypes = func["argTypes"].GetString();
+
+            g_pSquirrel<ScriptContext::UI>->AddFuncRegistration(returnTypeString,name,argTypes,helpText,SQStub);
+        }
+
+    }
+
     
 
 

@@ -22,6 +22,7 @@ struct VEngineServerVtable {
     void* unknown_5[13];
     int16_t(*unknown_18)(void* a1, int16_t a2);
 };
+
 struct IVEngineServer022 {
 
     VEngineServerVtable* vtable;

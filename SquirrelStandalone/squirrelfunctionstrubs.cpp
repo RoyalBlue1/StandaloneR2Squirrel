@@ -37,6 +37,9 @@ struct struct_unknown
     int64_t qword_50;
     int64_t qword_58;
 };
+
+
+
 typedef __int64 (*sub_11110Type)(__int64 a1, SQObject *a2);
 sub_11110Type sub_11110;
 
@@ -52,7 +55,9 @@ AUTOHOOK(sub_26BCB0, server.dll + 0x26BCB0, char, _fastcall, (void* a1, char* a2
     return 0;
 }
 
-
+AUTOHOOK(callfunction_client, client.dll + 0x10190, char, __fastcall, (int64_t a1, int64_t a2)) {
+    return 0;
+}
 
 
 bool engineServer_unknown_4_stub(__int64 a1) {
@@ -63,6 +68,8 @@ int16_t engineServer_unknown_18_stub(void* a1, int16_t a2) {
     return 1;
 }
 
+
+
 CGlobals* globals;
 
 void fixStuffForStandaloneServer(CModule module) {
@@ -71,25 +78,35 @@ void fixStuffForStandaloneServer(CModule module) {
     globals->mapName = "mp_rise";
     globals->isMP = 1;
     globals->unknownPointer_80 = (char*)malloc(0x4000);
+
     IVEngineServer022* engineServer = new IVEngineServer022;
     engineServer->vtable = new VEngineServerVtable;
     engineServer->vtable->unknown_4 = engineServer_unknown_4_stub;
     engineServer->vtable->unknown_18 = engineServer_unknown_18_stub;
 
+
+
     module.Offset(0x1616730).Patch((uint8_t*)&g_fileInterface, 8);
     module.Offset(0xBFBE08).Patch((uint8_t*)&globals, 8);
     module.Offset(0xBFBD98).Patch((uint8_t*)&engineServer, 8);
+    
 
 }
 
 
 struct VEngineGui {
-    void* unknown[10];
+    void* unknown[6];
+    void (*unknown_6)(__int64);
+    void* unknown_7[3];
     void (*unknown_10)(__int64, __int64, __int64);
 };
 
 void vEngineGui_10(__int64, __int64, __int64) {
     
+}
+
+void vEngineGui_6(__int64) {
+
 }
 
 void fixStuffForStandaloneClient(CModule module) {
@@ -98,9 +115,11 @@ void fixStuffForStandaloneClient(CModule module) {
     void* buf = malloc(792);
     static VEngineGui* vEngineGui = new VEngineGui;
     vEngineGui->unknown_10 = vEngineGui_10;
+    vEngineGui->unknown_6 = vEngineGui_6;
     VEngineGui** vEngineGuiPtr = &vEngineGui;
     module.Offset(0x2A87120).Patch((uint8_t*)&buf, 8);
     module.Offset(0xC3D9A8).Patch((uint8_t*)&vEngineGuiPtr, 8);
+    module.Offset(0x3C8354).NOP(39);
     
 }
 
@@ -114,7 +133,7 @@ ON_DLL_LOAD("client.dll", ClientSquirrelStubs, (CModule module)) {
         fixStuffForStandaloneClient(module);
     sub_11110 = module.Offset(0x11110).As<sub_11110Type>();
     sub_52DF30 = module.Offset(0x52DF30).As<sub_52DF30Type>();
-    *module.Offset(0x23E8248+92).As<int*>()= 0;
+    *module.Offset(0x23E8248).Deref().Offset(92).As<int*>() = 0;
 
 }
 
@@ -125,6 +144,8 @@ AUTOHOOK(loadDamageFlagsServer, server.dll + 0x6CC9F0, void*, __fastcall, (void)
 AUTOHOOK(loadDamageFlagsClient, client.dll + 0x3CDDF0, void*, __fastcall, (void)) {
     return 0;
 }
+
+
 
 struct retStruct {
     void* unknown[32];

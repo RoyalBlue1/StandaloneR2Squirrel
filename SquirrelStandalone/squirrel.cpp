@@ -303,71 +303,6 @@ int64_t __fastcall RegisterSquirrelFunctionHook(CSquirrelVM* sqvm, SQFuncRegistr
 }
 
 
-
-
-template <ScriptContext context> bool (*__fastcall CallScriptInitCallback)(void* sqvm, const char* callback);
-template <ScriptContext context> bool __fastcall CallScriptInitCallbackHook(void* sqvm, const char* callback)
-{
-	ScriptContext realContext = context;
-	bool bShouldCallCustomCallbacks = true;
-
-	if (context == ScriptContext::CLIENT)
-	{
-		if (!strcmp(callback, "UICodeCallback_UIInit"))
-			realContext = ScriptContext::UI;
-		else if (strcmp(callback, "ClientCodeCallback_MapSpawn"))
-			bShouldCallCustomCallbacks = false;
-	}
-	else if (context == ScriptContext::SERVER)
-		bShouldCallCustomCallbacks = !strcmp(callback, "CodeCallback_MapSpawn");
-
-	if (bShouldCallCustomCallbacks)
-	{
-		for (Mod mod : g_pModManager->m_LoadedMods)
-		{
-			if (!mod.m_bEnabled)
-				continue;
-
-			for (ModScript script : mod.Scripts)
-			{
-				for (ModScriptCallback modCallback : script.Callbacks)
-				{
-					if (modCallback.Context == realContext && modCallback.BeforeCallback.length())
-					{
-						CallScriptInitCallback<context>(sqvm, modCallback.BeforeCallback.c_str());
-					}
-				}
-			}
-		}
-	}
-
-
-	bool ret = CallScriptInitCallback<context>(sqvm, callback);
-
-	// run after callbacks
-	if (bShouldCallCustomCallbacks)
-	{
-		for (Mod mod : g_pModManager->m_LoadedMods)
-		{
-			if (!mod.m_bEnabled)
-				continue;
-
-			for (ModScript script : mod.Scripts)
-			{
-				for (ModScriptCallback modCallback : script.Callbacks)
-				{
-					if (modCallback.Context == realContext && modCallback.AfterCallback.length())
-					{
-						CallScriptInitCallback<context>(sqvm, modCallback.AfterCallback.c_str());
-					}
-				}
-			}
-		}
-	}
-
-	return ret;
-}
-
 template <ScriptContext context>CompileError* SquirrelManager<context>::compileTest() {
     lastCompileError.errorDuringCompile = false;
     startVM();
@@ -469,11 +404,6 @@ ON_DLL_LOAD("client.dll", ClientSquirrel, (CModule module))
     MAKEHOOK(module.Offset(0x26E70), &DestroyVMHook<ScriptContext::CLIENT>, &DestroyVM<ScriptContext::CLIENT>);
     MAKEHOOK(module.Offset(0x79A50), &ScriptCompileErrorHook<ScriptContext::CLIENT>, &SQCompileError<ScriptContext::CLIENT>);
 
-    MAKEHOOK(module.Offset(0x10190), &CallScriptInitCallbackHook<ScriptContext::CLIENT>, &CallScriptInitCallback<ScriptContext::CLIENT>);
-
-
-
-
 }
 
 ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
@@ -535,10 +465,6 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 	MAKEHOOK(module.Offset(0x260E0), &CreateNewVMHook<ScriptContext::SERVER>, &CreateNewVM<ScriptContext::SERVER>);
 	MAKEHOOK(module.Offset(0x26E20), &DestroyVMHook<ScriptContext::SERVER>, &DestroyVM<ScriptContext::SERVER>);
 	MAKEHOOK(module.Offset(0x799E0), &ScriptCompileErrorHook<ScriptContext::SERVER>, &SQCompileError<ScriptContext::SERVER>);
-	MAKEHOOK(module.Offset(0x1D5C0), &CallScriptInitCallbackHook<ScriptContext::SERVER>, &CallScriptInitCallback<ScriptContext::SERVER>);
-
-    
-
 
 }
 
