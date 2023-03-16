@@ -147,9 +147,7 @@
     <ClCompile Include="hook.cpp" />
     <ClCompile Include="hookutils.cpp" />
     <ClCompile Include="memory.cpp" />
-    <ClCompile Include="modmanager.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
+    <ClCompile Include="modmanager.cpp" />
     <ClCompile Include="prefix.cpp" />
     <ClCompile Include="scriptsrson.cpp" />
     <ClCompile Include="squirrel.cpp" />
