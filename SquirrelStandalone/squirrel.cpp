@@ -283,7 +283,7 @@ void __fastcall ScriptCompileErrorHook(HSquirrelVM* sqvm, const char* error, con
     if(realContext == ScriptContext::CLIENT && sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
         realContext = ScriptContext::UI;
     spdlog::error("Compile Error \"{}\" in {} VM in file {} on line {} in column {}\n", error,GetContextName(realContext), file, line, column);
-    exit(-1);
+    exit(1);
     /*
     
 
