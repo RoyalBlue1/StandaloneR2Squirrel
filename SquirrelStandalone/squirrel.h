@@ -109,6 +109,7 @@ typedef SQRESULT(*sq_compilebufferType)(
 	HSquirrelVM* sqvm, CompileBufferState* compileBuffer, const char* file, int a1, SQBool bShouldThrowError);
 typedef SQRESULT(*sq_callType)(HSquirrelVM* sqvm, SQInteger iArgs, SQBool bShouldReturn, SQBool bThrowError);
 typedef SQInteger(*sq_raiseerrorType)(HSquirrelVM* sqvm, const SQChar* pError);
+typedef bool (*sq_compilefileType)(CSquirrelVM* sqvm, const char* path, const char* name, int a4);
 
 // sq stack array funcs
 typedef void (*sq_newarrayType)(HSquirrelVM* sqvm, SQInteger iStackpos);
@@ -181,6 +182,7 @@ public:
 	sq_compilebufferType __sq_compilebuffer;
 	sq_callType __sq_call;
 	sq_raiseerrorType __sq_raiseerror;
+    sq_compilefileType __sq_compilefile;
 
 	sq_newarrayType __sq_newarray;
 	sq_arrayappendType __sq_arrayappend;
@@ -250,6 +252,11 @@ public:
 	{
 		return __sq_raiseerror(sqvm, sError);
 	}
+
+    inline bool compilefile(CSquirrelVM* sqvm, const char* path, const char* name, int a4)
+    {
+        return __sq_compilefile(sqvm, path, name, a4);
+    }
 
 	inline void newarray(HSquirrelVM* sqvm, const SQInteger stackpos = 0)
 	{

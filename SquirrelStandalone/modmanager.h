@@ -95,6 +95,8 @@ public:
     std::vector<ModConVar*> ConVars;
     // custom localisation files created by the mod
     std::vector<std::string> LocalisationFiles;
+    // custom script init.nut
+    std::string initScript;
 
     // other files:
 
