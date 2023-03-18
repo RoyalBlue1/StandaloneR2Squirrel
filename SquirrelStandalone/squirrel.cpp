@@ -162,9 +162,6 @@ template <ScriptContext context> void SquirrelManager<context>::AddFuncRegistrat
     std::string returnType, std::string name, std::string argTypes, std::string helpText, SQFunction func)
 {
 
-    if (context == ScriptContext::SERVER )
-        printf("registering function %s\n", name.c_str());
-
     SQFuncRegistration* reg = new SQFuncRegistration;
 
     reg->squirrelFuncName = new char[name.size() + 1];
