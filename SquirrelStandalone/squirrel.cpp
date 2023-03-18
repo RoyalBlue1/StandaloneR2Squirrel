@@ -242,6 +242,23 @@ template <ScriptContext context> CSquirrelVM* __fastcall CreateNewVMHook(void* a
 		return sqvm;
 }
 
+template <ScriptContext context> bool (*__fastcall CSquirrelVM_init)(CSquirrelVM* vm, ScriptContext realContext, float time);
+template <ScriptContext context> bool __fastcall CSquirrelVM_initHook(CSquirrelVM* vm, ScriptContext realContext, float time)
+{
+    bool ret = CSquirrelVM_init<context>(vm, realContext, time);
+    for (Mod mod : g_pModManager->m_LoadedMods)
+    {
+        if (mod.initScript.size() != 0)
+        {
+            std::string name = mod.initScript.substr(mod.initScript.find_last_of('/') + 1);
+            std::string path = std::string("scripts/vscripts/") + mod.initScript;
+            if (g_pSquirrel<context>->compilefile(vm, path.c_str(), name.c_str(), 0))
+                g_pSquirrel<context>->compilefile(vm, path.c_str(), name.c_str(), 1);
+        }
+    }
+    return ret;
+}
+
 template <ScriptContext context> void (*__fastcall DestroyVM)(void* a1, HSquirrelVM* sqvm);
 template <ScriptContext context> void __fastcall DestroyVMHook(void* a1, HSquirrelVM* sqvm)
 {
@@ -305,6 +322,7 @@ int64_t __fastcall RegisterSquirrelFunctionHook(CSquirrelVM* sqvm, SQFuncRegistr
 
 template <ScriptContext context>CompileError* SquirrelManager<context>::compileTest() {
     lastCompileError.errorDuringCompile = false;
+    spdlog::info("Compiling {} VM...", GetContextName(context));
     startVM();
     //__CSquirrelVM_Destory();
     return &lastCompileError;
@@ -323,8 +341,10 @@ ON_DLL_LOAD("client.dll", ClientSquirrel, (CModule module))
 
     g_pSquirrel<ScriptContext::CLIENT>->__sq_compilebuffer = module.Offset(0x3110).As<sq_compilebufferType>();
     g_pSquirrel<ScriptContext::CLIENT>->__sq_pushroottable = module.Offset(0x5860).As<sq_pushroottableType>();
+    g_pSquirrel<ScriptContext::CLIENT>->__sq_compilefile = module.Offset(0xF950).As<sq_compilefileType>();
     g_pSquirrel<ScriptContext::UI>->__sq_compilebuffer = g_pSquirrel<ScriptContext::CLIENT>->__sq_compilebuffer;
     g_pSquirrel<ScriptContext::UI>->__sq_pushroottable = g_pSquirrel<ScriptContext::CLIENT>->__sq_pushroottable;
+    g_pSquirrel<ScriptContext::UI>->__sq_compilefile = g_pSquirrel<ScriptContext::CLIENT>->__sq_compilefile;
 
     g_pSquirrel<ScriptContext::CLIENT>->__sq_call = module.Offset(0x8650).As<sq_callType>();
     g_pSquirrel<ScriptContext::UI>->__sq_call = g_pSquirrel<ScriptContext::CLIENT>->__sq_call;
@@ -404,6 +424,7 @@ ON_DLL_LOAD("client.dll", ClientSquirrel, (CModule module))
     MAKEHOOK(module.Offset(0x26E70), &DestroyVMHook<ScriptContext::CLIENT>, &DestroyVM<ScriptContext::CLIENT>);
     MAKEHOOK(module.Offset(0x79A50), &ScriptCompileErrorHook<ScriptContext::CLIENT>, &SQCompileError<ScriptContext::CLIENT>);
 
+    MAKEHOOK(module.Offset(0xE3B0), &CSquirrelVM_initHook<ScriptContext::CLIENT>, &CSquirrelVM_init<ScriptContext::CLIENT>);
 }
 
 ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
@@ -419,6 +440,7 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 	g_pSquirrel<ScriptContext::SERVER>->__sq_compilebuffer = module.Offset(0x3110).As<sq_compilebufferType>();
 	g_pSquirrel<ScriptContext::SERVER>->__sq_pushroottable = module.Offset(0x5840).As<sq_pushroottableType>();
 	g_pSquirrel<ScriptContext::SERVER>->__sq_call = module.Offset(0x8620).As<sq_callType>();
+    g_pSquirrel<ScriptContext::SERVER>->__sq_compilefile = module.Offset(0x1CD80).As<sq_compilefileType>();
 
 	g_pSquirrel<ScriptContext::SERVER>->__sq_newarray = module.Offset(0x39F0).As<sq_newarrayType>();
 	g_pSquirrel<ScriptContext::SERVER>->__sq_arrayappend = module.Offset(0x3C70).As<sq_arrayappendType>();
@@ -466,6 +488,7 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 	MAKEHOOK(module.Offset(0x26E20), &DestroyVMHook<ScriptContext::SERVER>, &DestroyVM<ScriptContext::SERVER>);
 	MAKEHOOK(module.Offset(0x799E0), &ScriptCompileErrorHook<ScriptContext::SERVER>, &SQCompileError<ScriptContext::SERVER>);
 
+    MAKEHOOK(module.Offset(0x17BE0), &CSquirrelVM_initHook<ScriptContext::SERVER>, &CSquirrelVM_init<ScriptContext::SERVER>);
 }
 
 
