@@ -280,7 +280,7 @@ void __fastcall ScriptCompileErrorHook(HSquirrelVM* sqvm, const char* error, con
 {
 	bool bIsFatalError = g_pSquirrel<context>->m_bFatalCompilationErrors;
     ScriptContext realContext = context;
-    if(realContext == ScriptContext::CLIENT && sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
+    if(realContext == ScriptContext::CLIENT && g_pSquirrel<ScriptContext::UI>->m_pSQVM != NULL &&  sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
         realContext = ScriptContext::UI;
     spdlog::error("Compile Error \"{}\" in {} VM in file {} on line {} in column {}\n", error,GetContextName(realContext), file, line, column);
     exit(1);
@@ -487,6 +487,7 @@ ON_DLL_LOAD("server.dll", ServerSquirrel, (CModule module))
 	MAKEHOOK(module.Offset(0x260E0), &CreateNewVMHook<ScriptContext::SERVER>, &CreateNewVM<ScriptContext::SERVER>);
 	MAKEHOOK(module.Offset(0x26E20), &DestroyVMHook<ScriptContext::SERVER>, &DestroyVM<ScriptContext::SERVER>);
 	MAKEHOOK(module.Offset(0x799E0), &ScriptCompileErrorHook<ScriptContext::SERVER>, &SQCompileError<ScriptContext::SERVER>);
+    MAKEHOOK(module.Offset(0x17BE0), &CSquirrelVM_initHook<ScriptContext::SERVER>, &CSquirrelVM_init<ScriptContext::SERVER>);
 
     MAKEHOOK(module.Offset(0x17BE0), &CSquirrelVM_initHook<ScriptContext::SERVER>, &CSquirrelVM_init<ScriptContext::SERVER>);
 }
