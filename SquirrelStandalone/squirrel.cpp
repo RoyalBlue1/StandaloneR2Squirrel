@@ -162,6 +162,9 @@ template <ScriptContext context> void SquirrelManager<context>::AddFuncRegistrat
     std::string returnType, std::string name, std::string argTypes, std::string helpText, SQFunction func)
 {
 
+    if (context == ScriptContext::SERVER )
+        printf("registering function %s\n", name.c_str());
+
     SQFuncRegistration* reg = new SQFuncRegistration;
 
     reg->squirrelFuncName = new char[name.size() + 1];
@@ -280,7 +283,7 @@ void __fastcall ScriptCompileErrorHook(HSquirrelVM* sqvm, const char* error, con
 {
 	bool bIsFatalError = g_pSquirrel<context>->m_bFatalCompilationErrors;
     ScriptContext realContext = context;
-    if(realContext == ScriptContext::CLIENT && sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
+    if(realContext == ScriptContext::CLIENT && g_pSquirrel<ScriptContext::UI>->m_pSQVM != NULL &&  sqvm == g_pSquirrel<ScriptContext::UI>->m_pSQVM->sqvm)
         realContext = ScriptContext::UI;
     spdlog::error("Compile Error \"{}\" in {} VM in file {} on line {} in column {}\n", error,GetContextName(realContext), file, line, column);
     exit(-1);
