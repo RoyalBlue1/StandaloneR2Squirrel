@@ -16,17 +16,17 @@ class SquirrelFilesystem
 public:
     std::string ReadFileToString(fs::path path)
     {
-        fs::path normalizedPath = path.make_preferred();
+        fs::path normalizedPath = g_pModManager->NormaliseModFilePath(path);
         if (g_pModManager->m_ModFiles.count(normalizedPath.string())) {
             path = GetFilePrefix()/GetModFolder()/g_pModManager->m_ModFiles[normalizedPath.string()].m_pOwningMod->m_ModDirectory/fs::path("mod")/ normalizedPath;
         }
         else {
             path = GetFilePrefix()/ fs::path("base") / normalizedPath;
         }
-        //printf("serarching for file: %s \n", path.string().c_str());
+        spdlog::debug("Reading file '{}'", path.string());
         if (!fs::exists(path)) {
             
-            spdlog::info("FILE \"{}\"NOT FOUND",path.string());
+            spdlog::warn("FILE '{}' NOT FOUND", path.string());
             return std::string("");
         }
             
