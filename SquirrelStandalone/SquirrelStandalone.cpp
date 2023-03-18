@@ -112,7 +112,7 @@ int main(int argc,char**argv)
 
     if (jsonStream.fail())
     {
-        spdlog::error("natives.json not found");
+        spdlog::error("{} not found", (GetFilePrefix() / jsonPath).string());
         return 1;
     }
 
@@ -125,7 +125,7 @@ int main(int argc,char**argv)
     // fail if parse error
     if (nativeJson.HasParseError())
     {
-        spdlog::error("natives.json could not be read");
+        spdlog::error("{} could not be read", (GetFilePrefix() / jsonPath).string());
         return 1;
     }
 
