@@ -53,6 +53,8 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
 
     Name = modJson["Name"].GetString();
 
+    spdlog::info("Loading mod: {}", Name);
+
     if (modJson.HasMember("Description"))
         Description = modJson["Description"].GetString();
     else
@@ -103,6 +105,9 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
             script.Path = scriptObj["Path"].GetString();
             script.RunOn = scriptObj["RunOn"].GetString();
 
+            spdlog::debug("- Registering script '{}'", script.Path, script.RunOn);
+            spdlog::debug("  - RunOn '{}'", script.RunOn);
+
             if (scriptObj.HasMember("ServerCallback") && scriptObj["ServerCallback"].IsObject())
             {
                 ModScriptCallback callback;
@@ -147,6 +152,12 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
 
             Scripts.push_back(script);
         }
+    }
+
+    if (modJson.HasMember("InitScript") && modJson["InitScript"].IsString())
+    {
+        initScript = modJson["InitScript"].GetString();
+        spdlog::debug("- Registering InitScript '{}'", initScript);
     }
 
     if (modJson.HasMember("Localisation") && modJson["Localisation"].IsArray())
