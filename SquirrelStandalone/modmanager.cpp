@@ -32,14 +32,14 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
     // fail if parse error
     if (modJson.HasParseError())
     {
-        printf("error reading mod %s", modDir.c_str());
+        spdlog::warn("error reading mod {}", modDir.string());
         return;
     }
 
     // fail if it's not a json obj (could be an array, string, etc)
     if (!modJson.IsObject())
     {
-        printf("Failed reading mod file %s: file is not a JSON object", (modDir / "mod.json").c_str());
+        spdlog::warn("Failed reading mod file {}: file is not a JSON object", (modDir / "mod.json").string());
         return;
     }
 
@@ -47,7 +47,7 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
     // name is required
     if (!modJson.HasMember("Name"))
     {
-        printf("Failed reading mod file %s: missing required member \"Name\"", (modDir / "mod.json").c_str());
+        spdlog::warn("Failed reading mod file {}: missing required member \"Name\"", (modDir / "mod.json").string());
         return;
     }
 
@@ -63,7 +63,7 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
     else
     {
         Version = "0.0.0";
-        printf("Mod file %s is missing a version, consider adding a version", (modDir / "mod.json").c_str());
+        spdlog::warn("Mod file {} is missing a version, consider adding a version", (modDir / "mod.json").string());
     }
 
     if (modJson.HasMember("DownloadLink"))
@@ -80,7 +80,7 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
         LoadPriority = modJson["LoadPriority"].GetInt();
     else
     {
-        printf("Mod file %s is missing a LoadPriority, consider adding one", (modDir / "mod.json").c_str());
+        spdlog::warn("Mod file {} is missing a LoadPriority, consider adding one", (modDir / "mod.json").string());
         LoadPriority = 0;
     }
 
@@ -102,48 +102,6 @@ Mod::Mod(fs::path modDir, char* jsonBuf)
 
             script.Path = scriptObj["Path"].GetString();
             script.RunOn = scriptObj["RunOn"].GetString();
-
-            if (scriptObj.HasMember("ServerCallback") && scriptObj["ServerCallback"].IsObject())
-            {
-                ModScriptCallback callback;
-                callback.Context = ScriptContext::SERVER;
-
-                if (scriptObj["ServerCallback"].HasMember("Before") && scriptObj["ServerCallback"]["Before"].IsString())
-                    callback.BeforeCallback = scriptObj["ServerCallback"]["Before"].GetString();
-
-                if (scriptObj["ServerCallback"].HasMember("After") && scriptObj["ServerCallback"]["After"].IsString())
-                    callback.AfterCallback = scriptObj["ServerCallback"]["After"].GetString();
-
-                script.Callbacks.push_back(callback);
-            }
-
-            if (scriptObj.HasMember("ClientCallback") && scriptObj["ClientCallback"].IsObject())
-            {
-                ModScriptCallback callback;
-                callback.Context = ScriptContext::CLIENT;
-
-                if (scriptObj["ClientCallback"].HasMember("Before") && scriptObj["ClientCallback"]["Before"].IsString())
-                    callback.BeforeCallback = scriptObj["ClientCallback"]["Before"].GetString();
-
-                if (scriptObj["ClientCallback"].HasMember("After") && scriptObj["ClientCallback"]["After"].IsString())
-                    callback.AfterCallback = scriptObj["ClientCallback"]["After"].GetString();
-
-                script.Callbacks.push_back(callback);
-            }
-
-            if (scriptObj.HasMember("UICallback") && scriptObj["UICallback"].IsObject())
-            {
-                ModScriptCallback callback;
-                callback.Context = ScriptContext::UI;
-
-                if (scriptObj["UICallback"].HasMember("Before") && scriptObj["UICallback"]["Before"].IsString())
-                    callback.BeforeCallback = scriptObj["UICallback"]["Before"].GetString();
-
-                if (scriptObj["UICallback"].HasMember("After") && scriptObj["UICallback"]["After"].IsString())
-                    callback.AfterCallback = scriptObj["UICallback"]["After"].GetString();
-
-                script.Callbacks.push_back(callback);
-            }
 
             Scripts.push_back(script);
         }
@@ -238,7 +196,7 @@ void ModManager::LoadMods()
         // fail if no mod json
         if (jsonStream.fail())
         {
-            printf("Mod %s has a directory but no mod.json", modDir.c_str());
+            spdlog::warn("Mod {} has a directory but no mod.json", modDir.string());
             continue;
         }
 
@@ -253,7 +211,7 @@ void ModManager::LoadMods()
         {
             if (m_DependencyConstants.find(pair.first) != m_DependencyConstants.end() && m_DependencyConstants[pair.first] != pair.second)
             {
-                printf("Constant %s in mod %s already exists in another mod.\n", pair.first.c_str(), mod.Name.c_str());
+                spdlog::warn("Constant {} in mod %s already exists in another mod.\n", pair.first, mod.Name);
                 mod.m_bWasReadSuccessfully = false;
                 break;
             }

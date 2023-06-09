@@ -48,13 +48,7 @@
     <ClCompile Include="scriptsrson.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scriptserverutilitys.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="fixConstants.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="serverchatmessage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="squirrelfunctionstrubs.cpp">

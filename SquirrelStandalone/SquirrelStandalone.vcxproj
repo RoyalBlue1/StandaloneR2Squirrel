@@ -149,9 +149,7 @@
     <ClCompile Include="modmanager.cpp" />
     <ClCompile Include="prefix.cpp" />
     <ClCompile Include="scriptdatatables.cpp" />
-    <ClCompile Include="scriptserverutilitys.cpp" />
     <ClCompile Include="scriptsrson.cpp" />
-    <ClCompile Include="serverchatmessage.cpp" />
     <ClCompile Include="squirrel.cpp" />
     <ClCompile Include="squirreldatatypes.cpp" />
     <ClCompile Include="squirrelfunctionstrubs.cpp" />

@@ -556,6 +556,7 @@ int sqInstructionToString(char* outBuffer, int outBufferLength, SQInstruction* i
             sq_OpToString(instruction->op),
             instruction->arg1);
     case _OP_JZ:
+    case _OP_JNZ:
         return snprintf(
             outBuffer,
             outBufferLength,
@@ -706,6 +707,7 @@ int sqInstructionToString(char* outBuffer, int outBufferLength, SQInstruction* i
     switch (instruction->op)
     {
     case _OP_MOVE:
+    case _OP_NOT:
         return snprintf(
             outBuffer,
             outBufferLength,
@@ -878,6 +880,7 @@ int sqInstructionToString(char* outBuffer, int outBufferLength, SQInstruction* i
             sq_OpToString(instruction->op),
             instruction->arg1);
     case _OP_JZ:
+    case _OP_JNZ:
         return snprintf(
             outBuffer,
             outBufferLength,
@@ -1030,6 +1033,7 @@ int sqInstructionToString(char* outBuffer, int outBufferLength, SQInstruction* i
             instruction->arg1,
             instruction->arg2 + stackbase);
     case _OP_FOREACH_STATICARRAY_NESTEDSTRUCT_START:
+    case _OP_FOREACH_STATICARRAY_START:
         return snprintf(
             outBuffer,
             outBufferLength,
@@ -1041,6 +1045,7 @@ int sqInstructionToString(char* outBuffer, int outBufferLength, SQInstruction* i
             instruction->arg1 + stackbase + 2,
             instruction->arg2 + stackbase);
     case _OP_FOREACH_STATICARRAY_NESTEDSTRUCT_NEXT:
+    case _OP_FOREACH_STATICARRAY_NEXT:
         return snprintf(
             outBuffer,
             outBufferLength,

@@ -27,6 +27,8 @@ struct SQRefCounted;
 struct SQLineInfo;
 struct SQLocalVarInfo;
 struct SQDbgServer;
+struct SQWeakRef;
+struct SQObject;
 
 const char* sq_getTypeName(int type);
 const char* sq_OpToString(int op);
@@ -88,6 +90,12 @@ enum SQObjectType : int
 
 /* 156 */
 
+template <class T> struct CUtlVector{
+    T* data;
+    int size;
+    int allocated;
+};
+
 
 struct SQRefCountedVTable
 {
@@ -99,8 +107,16 @@ struct SQRefCounted
 {
     SQRefCountedVTable* vtable;
     int uiRef;
-    int padding;
+    BYTE pad_4[4];
+    SQWeakRef* weakRef;
+};
 
+
+
+struct SQCollectable : SQRefCounted {
+    SQCollectable* _next;
+    SQCollectable* _prev;
+    SQSharedState* _sharedState;
 };
 
 struct othervarInfo
@@ -309,12 +325,9 @@ struct alignas(4) SQInstruction
 };
 
 /* 138 */
-struct alignas(8) SQString
+struct alignas(8) SQString : SQRefCounted
 {
-    void* vtable;
-    int uiRef;
-    int padding;
-    SQString* _next_maybe;
+
     SQSharedState* sharedState;
     int length;
     unsigned char gap_24[4]; // prob padding
@@ -323,15 +336,9 @@ struct alignas(8) SQString
 };
 
 /* 137 */
-struct alignas(8) SQTable
+struct alignas(8) SQTable : SQCollectable
 {
-    void* vtable;
-    int uiRef;
-    unsigned char gap_0C[4];
-    unsigned char gap_10[8];
-    void* pointer_18;
-    void* pointer_20;
-    void* _sharedState;
+
     long long field_30;
     tableNode* _nodes;
     int _numOfNodes;
@@ -344,15 +351,9 @@ struct alignas(8) SQTable
 };
 
 /* 140 */
-struct alignas(8) SQClosure
+struct alignas(8) SQClosure : SQCollectable
 {
-    void* vtable;
-    int uiRef;
-    unsigned char gap_0C[4];
-    void* pointer_10;
-    void* pointer_18;
-    void* pointer_20;
-    SQSharedState* sharedState;
+
     SQObject obj_30;
     SQObject _function;
     SQObject* _outervalues;
@@ -363,14 +364,9 @@ struct alignas(8) SQClosure
 };
 
 /* 139 */
-struct alignas(8) SQFunctionProto
+struct alignas(8) SQFunctionProto : SQCollectable
 {
-    void* vftable;
-    int uiRef;
-    BYTE gap_0C[12];
-    void* pointer_18;
-    void* pointer_20;
-    void* sharedState;
+
     void* pointer_30;
     SQObject fileName;
     SQObject funcName;
@@ -408,6 +404,9 @@ struct alignas(8) SQFunctionProto
     SQInstruction instruction[1];
 };
 
+struct SQWeakRef : SQRefCounted {
+    SQObject object;
+};
 
 /* 152 */
 struct SQStructDef
@@ -426,17 +425,11 @@ struct SQStructDef
 };
 
 /* 157 */
-struct alignas(8) SQNativeClosure
+struct alignas(8) SQNativeClosure : SQCollectable
 {
-    void* vtable;
-    int uiRef;
-    unsigned char gap_C[4];
-    long long value_10;
-    long long value_18;
-    long long value_20;
-    SQSharedState* sharedState;
+ 
     char unknown_30;
-    unsigned char padding_34[7];
+    unsigned char padding_31[7];
     long long value_38;
     long long value_40;
     long long value_48;
@@ -450,22 +443,24 @@ struct alignas(8) SQNativeClosure
 };
 
 /* 162 */
-struct SQArray
+struct SQArray : SQCollectable
 {
-    void* vtable;
-    int uiRef;
-    unsigned char gap_24[36];
-    SQObject* _values;
-    int _usedSlots;
-    int _allocated;
+
+    CUtlVector<SQObject> _values;
+};
+
+struct SQTrap {
+    int _stackbase;
+    int _top;
+    long long Instruction;
+    int unknown;
+    BYTE gap_[4];
 };
 
 /* 129 */
-struct alignas(8) HSquirrelVM
+struct alignas(8) HSquirrelVM : SQRefCounted
 {
-    void* vtable;
-    int uiRef;
-    unsigned char gap_C[12];
+
     void* _toString;
     void* _roottable_pointer;
     void* pointer_28;
@@ -489,9 +484,8 @@ struct alignas(8) HSquirrelVM
     SQObject _roottable_object;
     SQObject _lasterror;
     SQObject _errorHandler;
-    long long field_E8;
-    int traps;
-    unsigned char gap_F4[12];
+    CUtlVector<SQTrap> _traps;
+    unsigned char gap_F8[8];
     int _nnativecalls;
     int _suspended;
     int _suspended_root;
@@ -504,16 +498,11 @@ struct alignas(8) HSquirrelVM
 };
 
 /* 150 */
-struct SQStructInstance
-{
-    void* vtable;
-    unsigned int uiRef;
-    unsigned char gap_C[12];
-    void* pointer_18;
-    unsigned char gap_20[8];
-    SQSharedState* _sharedState;
-    unsigned char gap[8];
-    SQObject data[20];
+struct SQStructInstance : SQCollectable{
+
+    unsigned int size;
+    unsigned char pad[4];
+    SQObject data[1];
 };
 
 /* 148 */
@@ -680,22 +669,16 @@ struct CSquirrelVM
     unsigned char gap_40[200];
 };
 
-struct SQUserData
+struct SQUserData : SQCollectable
 {
-    void* vtable;
-    int uiRef;
-    char gap_12[4];
-    long long unknown_10;
-    long long unknown_18;
-    long long unknown_20;
-    long long sharedState;
-    long long unknown_30;
-    int size;
-    char padding1[4];
-    releasehookType releaseHook;
-    long long typeId;
-    char data[1];
+    SQTable *unknownSQTable_30;
+    __int32 size;
+    BYTE pad_3C[4];
+    __int64 releaseHook;
+    __int64 typeId;
+    void *data;
 };
+
 
 struct SQLocalVarInfo
 {

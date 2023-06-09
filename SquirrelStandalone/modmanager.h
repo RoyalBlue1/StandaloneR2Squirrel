@@ -31,7 +31,7 @@ public:
 struct ModScriptCallback
 {
 public:
-    ScriptContext Context;
+    int Context;
 
     // called before the codecallback is executed
     std::string BeforeCallback;
@@ -116,7 +116,7 @@ public:
 struct ModOverrideFile
 {
 public:
-    Mod* m_pOwningMod;
+    Mod* m_pOwningMod = 0;
     fs::path m_Path;
 };
 

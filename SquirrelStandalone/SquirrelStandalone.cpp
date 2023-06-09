@@ -75,7 +75,6 @@ bool LoadLibraries()
     LOAD_LIBRARY("tier0.dll");
     LOAD_LIBRARY("vstdlib.dll");
     LOAD_LIBRARY("server.dll");
-    LOAD_LIBRARY("client.dll");
     return true;
 
 }
@@ -93,19 +92,19 @@ int main()
     SetFilePrefixToCurrentDirectory();
     g_pModManager = new ModManager();
     g_filesystem = new SquirrelFilesystem();
+   
+
+
+    g_pSquirrel->startVM();
+
+    g_pSquirrel->ExecuteCode("ScriptCompilerTest()");
     
-
-    //g_pSquirrel<ScriptContext::SERVER>->startVM();
-
-    g_pSquirrel<ScriptContext::CLIENT>->startVM();
-    g_pSquirrel<ScriptContext::UI>->startVM();
-    g_pSquirrel<ScriptContext::SERVER>->startVM();
-
-    /*
-    g_pSquirrel<ScriptContext::SERVER>->ExecuteCode("CodeCallback_MapSpawn()");
-    g_pSquirrel<ScriptContext::SERVER>->ExecuteCode("GamemodeFD_Init()");
-    g_pSquirrel<ScriptContext::SERVER>->ExecuteCode("CodeCallback_PostEntityInit()");
-	*/
-
+    for (int i = 0; i < 125; i++) {
+        if(executedOPCodes.count(i))
+            spdlog::info("instruction {} executed {} times",sq_OpToString(i),executedOPCodes[i]);
+        else
+            spdlog::info("instruction {} was not executed",sq_OpToString(i));
+        
+    }
 }
 

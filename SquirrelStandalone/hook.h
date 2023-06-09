@@ -113,7 +113,7 @@ public:
 	{
 		iAddressResolutionMode = ABSOLUTE_ADDR;
 
-		const int iFuncNameStrlen = strlen(funcName) + 1;
+		size_t iFuncNameStrlen = strlen(funcName) + 1;
 		pFuncName = new char[iFuncNameStrlen];
 		memcpy(pFuncName, funcName, iFuncNameStrlen);
 
@@ -125,11 +125,11 @@ public:
 	{
 		iAddressResolutionMode = OFFSET_STRING;
 
-		const int iFuncNameStrlen = strlen(funcName) + 1;
+		size_t iFuncNameStrlen = strlen(funcName) + 1;
 		pFuncName = new char[iFuncNameStrlen];
 		memcpy(pFuncName, funcName, iFuncNameStrlen);
 
-		const int iAddrStrlen = strlen(addrString) + 1;
+		size_t iAddrStrlen = strlen(addrString) + 1;
 		pAddrString = new char[iAddrStrlen];
 		memcpy(pAddrString, addrString, iAddrStrlen);
 
@@ -141,15 +141,15 @@ public:
 	{
 		iAddressResolutionMode = PROCADDRESS;
 
-		const int iFuncNameStrlen = strlen(funcName) + 1;
+		size_t iFuncNameStrlen = strlen(funcName) + 1;
 		pFuncName = new char[iFuncNameStrlen];
 		memcpy(pFuncName, funcName, iFuncNameStrlen);
 
-		const int iModuleNameStrlen = strlen(moduleName) + 1;
+		size_t iModuleNameStrlen = strlen(moduleName) + 1;
 		pModuleName = new char[iModuleNameStrlen];
 		memcpy(pModuleName, moduleName, iModuleNameStrlen);
 
-		const int iProcNameStrlen = strlen(procName) + 1;
+		size_t iProcNameStrlen = strlen(procName) + 1;
 		pProcName = new char[iProcNameStrlen];
 		memcpy(pProcName, procName, iProcNameStrlen);
 
@@ -186,7 +186,7 @@ public:
 		case OFFSET_STRING:
 		{
 			// in the format server.dll + 0xDEADBEEF
-			int iDllNameEnd = 0;
+			size_t iDllNameEnd = 0;
 			for (; !isspace(pAddrString[iDllNameEnd]) && pAddrString[iDllNameEnd] != '+'; iDllNameEnd++)
 				;
 
@@ -203,8 +203,8 @@ public:
 			// get the offset string
 			uintptr_t iOffset = 0;
 
-			int iOffsetBegin = iDllNameEnd;
-			int iOffsetEnd = strlen(pAddrString);
+			size_t iOffsetBegin = iDllNameEnd;
+			size_t iOffsetEnd = strlen(pAddrString);
 
 			// seek until we hit the start of the number offset
 			for (; !(pAddrString[iOffsetBegin] >= '0' && pAddrString[iOffsetBegin] <= '9') && pAddrString[iOffsetBegin]; iOffsetBegin++)
